@@ -139,7 +139,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               communities.map((comm) => (
               <DropdownMenuItem 
                 key={comm.id} 
-                onClick={() => setSelectedCommunity(comm)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelectedCommunity(comm);
+                }}
                 className="gap-2"
               >
                 <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-xs">
@@ -172,9 +175,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
                 onClick={(e) => {
+                  e.preventDefault();
                   // #region agent log
                   fetch('http://127.0.0.1:7243/ingest/f7f539cc-af4e-42c4-bdaa-abc176a59b89',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:133',message:'Navigation link clicked',data:{itemName:item.name,itemHref:item.href,currentLocation:location,isActive},timestamp:Date.now(),sessionId:'debug-session',runId:'audit1',hypothesisId:'C'})}).catch(()=>{});
                   // #endregion
+                  setLocation(linkHref);
                   setIsMobileOpen(false);
                 }}
                 title={collapsed ? item.name : undefined}
