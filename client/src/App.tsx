@@ -126,13 +126,20 @@ function Router() {
         <PurchasePage />
       </Route>
       
+      {/* Rota de comunidade por slug: /c/:slug - precisa estar antes do catch-all */}
+      <Route path="/c/:slug">
+        <AuthGuard>
+          <Layout>
+            <Dashboard />
+          </Layout>
+        </AuthGuard>
+      </Route>
+      
       {/* Root app routes */}
       <Route>
         <AuthGuard>
           <Layout>
             <Switch>
-              {/* Rota de comunidade por slug: /c/:slug - redireciona para dashboard */}
-              <Route path="/c/:slug" component={Dashboard} />
               {/* Rotas normais (funcionam com ou sem slug no contexto) */}
               <Route path="/" component={Dashboard} />
               <Route path="/courses/:id" component={CourseView} />
