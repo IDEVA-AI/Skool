@@ -1,8 +1,18 @@
-import { useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { PlayCircle, Search, Filter, Loader2, Lock } from "lucide-react";
+import { PlayCircle, Search, Filter, Loader2, Lock, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useLocation } from "wouter";
 import { useCourses, useEnrollments, useEnrollInCourse, useIsEnrolled } from "@/hooks/use-courses";
@@ -11,25 +21,75 @@ import { useToast } from "@/hooks/use-toast";
 import { useHasCourseAccess } from "@/hooks/use-course-invites";
 import { Skeleton } from "@/components/ui/skeleton";
 
+type FilterStatus = 'all' | 'enrolled' | 'free' | 'locked';
+type SortOption = 'recent' | 'alphabetical' | 'progress';
+
 export default function Courses() {
   const [location, setLocation] = useLocation();
   const { data: courses, isLoading, error } = useCourses();
   const { data: enrolledCourseIds = [] } = useEnrollments();
   
-  // Debug: Log dos cursos carregados
-  useEffect(() => {
-    if (!isLoading) {
-      console.log('📊 Courses Page - Status:', {
-        isLoading,
-        hasError: !!error,
-        error: error?.message,
-        coursesCount: courses?.length || 0,
-        courses: courses?.map(c => ({ id: c.id, title: c.title, community_id: c.community_id }))
-      });
-    }
-  }, [courses, isLoading, error]);
   const enrollMutation = useEnrollInCourse();
   const { toast } = useToast();
+
+  // Estados de filtro e busca
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
+  const [sortOption, setSortOption] = useState<SortOption>('recent');
+
+  // Filtrar e ordenar cursos
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+
+    let result = [...courses];
+
+    // Filtro por busca
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(course =>
+        course.title.toLowerCase().includes(query) ||
+        course.description?.toLowerCase().includes(query)
+      );
+    }
+
+    // Filtro por status
+    if (statusFilter !== 'all') {
+      result = result.filter(course => {
+        const isEnrolled = enrolledCourseIds.includes(course.id);
+        switch (statusFilter) {
+          case 'enrolled':
+            return isEnrolled;
+          case 'free':
+            return !course.is_locked && !isEnrolled;
+          case 'locked':
+            return course.is_locked && !isEnrolled;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Ordenação
+    result.sort((a, b) => {
+      switch (sortOption) {
+        case 'alphabetical':
+          return a.title.localeCompare(b.title);
+        case 'recent':
+        default:
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      }
+    });
+
+    return result;
+  }, [courses, searchQuery, statusFilter, sortOption, enrolledCourseIds]);
+
+  const hasActiveFilters = statusFilter !== 'all' || searchQuery.trim() !== '';
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setSortOption('recent');
+  };
 
   const handleEnroll = async (e: React.MouseEvent, courseId: number) => {
     e.stopPropagation();
@@ -81,11 +141,51 @@ export default function Courses() {
         <div className="flex items-center gap-2 w-full md:w-auto">
             <div className="relative w-full md:w-64">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar..." className="pl-9 h-9 bg-muted/50" />
+                <Input 
+                  placeholder="Buscar cursos..." 
+                  className="pl-9 h-9 bg-muted/50" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
             </div>
-            <Button variant="outline" size="icon" className="h-9 w-9 shrink-0">
-                <Filter className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className={`h-9 w-9 shrink-0 ${hasActiveFilters ? 'border-primary text-primary' : ''}`}>
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Status</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={statusFilter} onValueChange={(v) => setStatusFilter(v as FilterStatus)}>
+                  <DropdownMenuRadioItem value="all">Todos</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="enrolled">Inscritos</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="free">Gratuitos</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="locked">Bloqueados</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Ordenar por</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={sortOption} onValueChange={(v) => setSortOption(v as SortOption)}>
+                  <DropdownMenuRadioItem value="recent">Mais recentes</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="alphabetical">Alfabético</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                {hasActiveFilters && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <Button variant="ghost" size="sm" className="w-full justify-start text-xs" onClick={clearFilters}>
+                      <X className="h-3 w-3 mr-2" /> Limpar filtros
+                    </Button>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </header>
 
@@ -102,9 +202,9 @@ export default function Courses() {
             </Card>
           ))}
         </div>
-      ) : courses && courses.length > 0 ? (
+      ) : filteredCourses.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {courses.map((course) => {
+          {filteredCourses.map((course) => {
             const isEnrolled = enrolledCourseIds.includes(course.id);
             const CourseProgress = ({ courseId }: { courseId: number }) => {
               const { progress } = useCourseProgress(courseId);
@@ -208,7 +308,16 @@ export default function Courses() {
         </div>
       ) : (
         <div className="text-center py-12 text-muted-foreground">
-          <p>Nenhum curso disponível no momento.</p>
+          {hasActiveFilters ? (
+            <>
+              <p>Nenhum curso encontrado com os filtros atuais.</p>
+              <Button variant="link" onClick={clearFilters} className="mt-2">
+                Limpar filtros
+              </Button>
+            </>
+          ) : (
+            <p>Nenhum curso disponível no momento.</p>
+          )}
         </div>
       )}
     </div>

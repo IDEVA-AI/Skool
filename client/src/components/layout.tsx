@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-user-role";
 import { useProfile } from "@/hooks/use-profile";
+import { useIsPremium } from "@/hooks/use-premium";
 import { getAvatarUrl } from "@/lib/avatar-utils";
 
 const baseNavigation = [
@@ -30,6 +31,7 @@ const baseNavigation = [
 
 import { ChatDropdown } from "@/components/chat-dropdown";
 import { NotificationDropdown } from "@/components/notification-dropdown";
+import { SearchCommand, SearchTrigger } from "@/components/search-command";
 import { useSelectedCommunity } from "@/contexts/community-context";
 import { useUserCommunities } from "@/hooks/use-communities";
 
@@ -43,6 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const isAdmin = useIsAdmin();
   const { data: communities = [], isLoading: communitiesLoading } = useUserCommunities();
   const { data: profile } = useProfile();
+  const { data: isPremium = false } = useIsPremium();
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
@@ -70,7 +73,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const currentUser = user ? {
     name: profile?.name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
     avatar: getAvatarUrl(profile?.avatar_url || user.user_metadata?.avatar_url, profile?.name || user.user_metadata?.name || user.email) || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || user.user_metadata?.name || user.email || 'U')}`,
-    isPremium: false, // TODO: implementar verificação de premium
+    isPremium,
   } : null;
   
   // Collapse by default, manual toggle
@@ -84,10 +87,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       id: 'loading',
       name: 'Carregando...',
       icon: '⏳',
+      logo_url: null as string | null,
     } : {
       id: 'default',
       name: 'Comunidade',
       icon: '👥',
+      logo_url: null as string | null,
     });
 
     return (
@@ -101,9 +106,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className={cn("hover:bg-muted/50", collapsed ? "h-10 w-10 p-0 rounded-full justify-center" : "w-full justify-between px-2")}>
               <div className="flex items-center gap-2 font-heading font-bold text-sm tracking-tight text-primary truncate">
-                 <div className="h-6 w-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-xs shrink-0">
-                    {displayCommunity.slug === 'zona' ? 'ZN' : (displayCommunity.logo_data ? '📷' : '👥')}
-                 </div>
+                 {displayCommunity.logo_url ? (
+                   <img 
+                     src={displayCommunity.logo_url} 
+                     alt={displayCommunity.name} 
+                     className="h-6 w-6 rounded object-cover shrink-0"
+                   />
+                 ) : (
+                   <div className="h-6 w-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium shrink-0">
+                     {displayCommunity.name?.slice(0, 2).toUpperCase() || '👥'}
+                   </div>
+                 )}
                  {!collapsed && <span className="truncate">{displayCommunity.name}</span>}
               </div>
               {!collapsed && <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />}
@@ -145,9 +158,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 }}
                 className="gap-2"
               >
-                <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-xs">
-                    {comm.slug === 'zona' ? 'ZN' : (comm.logo_data ? '📷' : '👥')}
-                </div>
+                {comm.logo_url ? (
+                  <img 
+                    src={comm.logo_url} 
+                    alt={comm.name} 
+                    className="h-5 w-5 rounded object-cover"
+                  />
+                ) : (
+                  <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-xs font-medium">
+                    {comm.name?.slice(0, 2).toUpperCase() || '👥'}
+                  </div>
+                )}
                 <span className="flex-1 truncate">{comm.name}</span>
                   {selectedCommunity && selectedCommunity.id === comm.id && <Check className="h-4 w-4" />}
               </DropdownMenuItem>
@@ -176,9 +197,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 )}
                 onClick={(e) => {
                   e.preventDefault();
-                  // #region agent log
-                  fetch('http://127.0.0.1:7243/ingest/f7f539cc-af4e-42c4-bdaa-abc176a59b89',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'layout.tsx:133',message:'Navigation link clicked',data:{itemName:item.name,itemHref:item.href,currentLocation:location,isActive},timestamp:Date.now(),sessionId:'debug-session',runId:'audit1',hypothesisId:'C'})}).catch(()=>{});
-                  // #endregion
                   setLocation(linkHref);
                   setIsMobileOpen(false);
                 }}
@@ -280,11 +298,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Desktop Top Bar */}
         <div className="hidden md:flex h-16 items-center px-8 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20 relative">
             <div className="w-full max-w-xl absolute left-1/2 -translate-x-1/2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Pesquisar" 
-                  className="pl-9 bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-primary/20 h-10"
-                />
+                <SearchTrigger className="w-full justify-start" />
             </div>
             
             <div className="flex items-center gap-2 ml-auto">
@@ -313,6 +327,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* Global Search Dialog */}
+      <SearchCommand />
     </div>
   );
 }

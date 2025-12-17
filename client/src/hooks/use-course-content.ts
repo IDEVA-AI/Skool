@@ -12,13 +12,7 @@ export function useModules(courseId: number) {
         .order('order', { ascending: true });
 
       if (error) {
-        console.error(`❌ Erro ao buscar módulos do curso ${courseId}:`, error);
         throw error;
-      }
-      
-      console.log(`✅ Módulos carregados do curso ${courseId}:`, data?.length || 0, 'módulos');
-      if (data && data.length > 0) {
-        console.log('📦 Módulos:', data.map(m => ({ id: m.id, title: m.title, order: m.order })));
       }
       
       return data;
@@ -38,13 +32,7 @@ export function useLessons(moduleId: number) {
         .order('order', { ascending: true });
 
       if (error) {
-        console.error(`❌ Erro ao buscar aulas do módulo ${moduleId}:`, error);
         throw error;
-      }
-      
-      console.log(`✅ Aulas carregadas do módulo ${moduleId}:`, data?.length || 0, 'aulas');
-      if (data && data.length > 0) {
-        console.log('📝 Aulas:', data.map(l => ({ id: l.id, title: l.title, order: l.order })));
       }
       
       return data;

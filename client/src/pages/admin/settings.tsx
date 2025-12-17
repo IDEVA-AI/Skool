@@ -44,7 +44,7 @@ export default function AdminSettings() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="platform-name">Nome da Plataforma</Label>
-              <Input id="platform-name" placeholder="S-K-O-O-L" defaultValue="S-K-O-O-L" />
+              <Input id="platform-name" placeholder="Aurius" defaultValue="Aurius" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="platform-description">Descrição</Label>

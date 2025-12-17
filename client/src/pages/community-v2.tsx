@@ -86,22 +86,6 @@ export default function Community() {
     return communityCourses.length > 0 ? communityCourses[0].id : null;
   }, [enrolledCommunityCourses, communityCourses]);
 
-  // Debug: Log das variáveis relevantes para diagnóstico
-  useEffect(() => {
-    if (isExpanded) {
-      console.log('🔍 DEBUG - Botão PUBLICAR:', {
-        selectedCommunity: selectedCommunity?.id,
-        allCoursesCount: allCourses?.length || 0,
-        communityCoursesCount: communityCourses.length,
-        enrolledCommunityCoursesCount: enrolledCommunityCourses.length,
-        defaultCourseId,
-        postTitle: postTitle.trim(),
-        postContent: postContent.trim(),
-        hasText: hasTextContent(postContent),
-        isButtonDisabled: createPostMutation.isPending || getOrCreateDefaultCourse.isPending || !postTitle.trim() || !postContent.trim() || !hasTextContent(postContent),
-      });
-    }
-  }, [isExpanded, selectedCommunity, allCourses, communityCourses, enrolledCommunityCourses, defaultCourseId, postTitle, postContent, createPostMutation.isPending, getOrCreateDefaultCourse.isPending]);
 
   const currentUser = user ? {
     name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',

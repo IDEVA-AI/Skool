@@ -7,6 +7,8 @@ import { ReactionType } from '@/types/social';
 import { useSavePost, useUnsavePost, useSavedPostIds } from '@/hooks/use-saved-posts';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { shareContent, getPostUrl } from '@/lib/share';
+import { useSelectedCommunity } from '@/contexts/community-context';
 
 interface PostActionsProps {
   postId: string;
@@ -18,6 +20,7 @@ interface PostActionsProps {
   onShareClick?: () => void;
   onReactionChange?: (reactions: Array<{ id: string; type: ReactionType; userId: string; userName: string }>) => void;
   className?: string;
+  postTitle?: string;
 }
 
 export function PostActions({
@@ -30,8 +33,10 @@ export function PostActions({
   onShareClick,
   onReactionChange,
   className,
+  postTitle,
 }: PostActionsProps) {
   const { toast } = useToast();
+  const { communitySlug } = useSelectedCommunity();
   const postIdNum = parseInt(postId) || 0;
   const savedPostIds = useSavedPostIds();
   const isSaved = savedPostIds.includes(postIdNum);
@@ -67,6 +72,34 @@ export function PostActions({
 
   const handleReaction = (type: ReactionType) => {
     toggleReaction(type);
+  };
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    const url = getPostUrl(postId, communitySlug || undefined);
+    const result = await shareContent({
+      title: postTitle || 'Confira este post',
+      text: 'Veja este post interessante!',
+      url,
+    });
+
+    if (result.success) {
+      if (result.method === 'clipboard') {
+        toast({
+          title: 'Link copiado!',
+          description: 'O link foi copiado para a área de transferência',
+        });
+      }
+    } else {
+      toast({
+        title: 'Erro ao compartilhar',
+        description: 'Não foi possível compartilhar o conteúdo',
+        variant: 'destructive',
+      });
+    }
+
+    onShareClick?.();
   };
 
   const handleSaveToggle = async (e: React.MouseEvent) => {
@@ -154,17 +187,15 @@ export function PostActions({
           </span>
         </Button>
 
-        {onShareClick && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onShareClick}
-            className="gap-2 h-8 px-2 text-muted-foreground hover:text-primary"
-          >
-            <Share2 className="h-4 w-4" />
-            <span className="text-sm font-medium hidden sm:inline">Compartilhar</span>
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleShare}
+          className="gap-2 h-8 px-2 text-muted-foreground hover:text-primary"
+        >
+          <Share2 className="h-4 w-4" />
+          <span className="text-sm font-medium hidden sm:inline">Compartilhar</span>
+        </Button>
       </div>
     </div>
   );

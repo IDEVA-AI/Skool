@@ -157,12 +157,10 @@ export default function Home() {
         currentUserAvatar={currentUser?.avatar}
         onCommentAdd={handleCommentAdd}
         onReactionChange={(postId, reactions) => {
-          // Atualizar reações do post
-          // Em uma implementação real, você atualizaria o estado do post
-          console.log('Reaction changed:', postId, reactions);
+          // TODO: Implementar atualização de reações
         }}
         onShare={(postId) => {
-          console.log('Share post:', postId);
+          // TODO: Implementar compartilhamento
         }}
       />
 
@@ -175,10 +173,9 @@ export default function Home() {
           onCommentAdd={handleCommentAdd}
           onPostClick={(post) => setSelectedFeedPost(post)}
           context={selectedCommunity?.name || 'Comunidade'}
-          contextHighlight={true}
+          contextHighlight={selectedCommunity?.name}
           onShare={(postId) => {
-            // Implementar compartilhamento se necessário
-            console.log('Share post:', postId);
+            // TODO: Implementar compartilhamento
           }}
         />
       </div>
