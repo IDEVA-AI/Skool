@@ -35,7 +35,7 @@ END $$;
 -- PASSO 2: Criar dados seed (cursos, módulos, aulas)
 SELECT create_seed_data();
 
--- PASSO 3: Criar anúncio de boas-vindas
+-- PASSO 3: Criar aviso de boas-vindas
 INSERT INTO announcements (title, content, created_by, is_active)
 SELECT 
   'Bem-vindo à Plataforma S-K-O-O-L! 🎓',
@@ -67,7 +67,7 @@ BEGIN
   RAISE NOTICE 'Cursos: %', course_count;
   RAISE NOTICE 'Módulos: %', module_count;
   RAISE NOTICE 'Aulas: %', lesson_count;
-  RAISE NOTICE 'Anúncios ativos: %', announcement_count;
+  RAISE NOTICE 'Avisos ativos: %', announcement_count;
   RAISE NOTICE '========================================';
   
   IF course_count = 0 THEN

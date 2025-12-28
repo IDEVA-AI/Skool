@@ -43,7 +43,7 @@ export default function AdminCourses() {
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [deletingCourseId, setDeletingCourseId] = useState<number | null>(null);
   const [localCourses, setLocalCourses] = useState<any[]>([]);
-  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('grid');
 
   // Usar cursos locais se houver (para otimistic update), senão usar do servidor
   const displayCourses = useMemo(() => {
@@ -80,10 +80,6 @@ export default function AdminCourses() {
 
     try {
       await deleteMutation.mutateAsync(deletingCourseId);
-      toast({
-        title: 'Curso deletado',
-        description: 'O curso foi removido com sucesso',
-      });
       setDeletingCourseId(null);
       // Atualizar lista local
       setLocalCourses(prev => prev.filter(c => c.id !== deletingCourseId));
@@ -118,11 +114,6 @@ export default function AdminCourses() {
       // Persistir nova ordem no banco
       const courseIds = newCourses.map(course => course.id);
       await reorderMutation.mutateAsync(courseIds);
-      
-      toast({
-        title: 'Ordem atualizada',
-        description: 'A ordem dos cursos foi salva com sucesso',
-      });
     } catch (error: any) {
       // Reverter em caso de erro
       setLocalCourses(courses || []);
@@ -209,7 +200,7 @@ export default function AdminCourses() {
                   <TableRow>
                     <TableHead className="w-10"></TableHead>
                     <TableHead>Título</TableHead>
-                    <TableHead>Comunidade</TableHead>
+                    <TableHead>Comunidades</TableHead>
                     <TableHead>Criado em</TableHead>
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>

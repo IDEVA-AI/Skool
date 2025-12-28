@@ -210,7 +210,7 @@ export function useUpdateCommunity() {
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['community', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['community'] });
       queryClient.invalidateQueries({ queryKey: ['user-communities'] });
       queryClient.invalidateQueries({ queryKey: ['owned-communities'] });
     },

@@ -4,15 +4,6 @@ import { cn } from "@/lib/utils"
 
 const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, type, onKeyDown, ...props }, ref) => {
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      // Permitir Ctrl+A (ou Cmd+A no Mac) para selecionar tudo
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-        e.stopPropagation();
-        // Não chamar preventDefault para permitir o comportamento padrão
-      }
-      onKeyDown?.(e);
-    };
-
     return (
       <input
         type={type}
@@ -21,7 +12,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           className
         )}
         ref={ref}
-        onKeyDown={handleKeyDown}
+        onKeyDown={onKeyDown}
         {...props}
       />
     )

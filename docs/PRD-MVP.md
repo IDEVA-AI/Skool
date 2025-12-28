@@ -15,7 +15,7 @@ Lançar uma versão mínima funcional que permita:
 - Criadores publicarem cursos gratuitos
 - Alunos se inscreverem e acessarem cursos
 - Comunidade básica de discussão
-- Anúncios simples
+- Avisos simples
 - **Nota**: Pagamentos serão implementados na próxima etapa
 
 ### 1.3 Público-Alvo MVP
@@ -50,8 +50,8 @@ Lançar uma versão mínima funcional que permita:
 - ❌ Assinaturas recorrentes (Fase 2)
 - ❌ Códigos promocionais (Fase 2)
 
-#### 2.1.5 Anúncios (Simples)
-- ✅ Criação de anúncios (texto e imagem)
+#### 2.1.5 Avisos (Simples)
+- ✅ Criação de avisos (texto e imagem)
 - ✅ Exibição na plataforma
 - ❌ Segmentação avançada (Fase 2)
 - ❌ Agendamento (Fase 2)
@@ -105,10 +105,10 @@ Lançar uma versão mínima funcional que permita:
 - ❌ Chat em tempo real (Fase 2)
 - ❌ Moderação avançada (Fase 2)
 
-### 3.6 Anúncios (Simples)
-- **RF022**: Criar anúncio (título, texto, imagem opcional)
-- **RF023**: Exibir anúncios na plataforma
-- **RF024**: Editar e deletar anúncios (apenas admin)
+### 3.6 Avisos (Simples)
+- **RF022**: Criar aviso (título, texto, imagem opcional)
+- **RF023**: Exibir avisos na plataforma
+- **RF024**: Editar e deletar avisos (apenas admin)
 - ❌ Segmentação (Fase 2)
 - ❌ Agendamento (Fase 2)
 - ❌ Analytics (Fase 2)
@@ -170,7 +170,7 @@ Lançar uma versão mínima funcional que permita:
 - Persistir cursos, módulos e aulas
 - Guardar inscrições de alunos em cursos
 - Armazenar posts e comentários do fórum
-- Salvar anúncios e configurações
+- Salvar avisos e configurações
 
 **Opções para MVP (do mais simples ao mais robusto):**
 
@@ -264,7 +264,7 @@ Lançar uma versão mínima funcional que permita:
 6. **Como** aluno, **quero** marcar aulas como concluídas **para** acompanhar meu progresso
 7. **Como** aluno, **quero** criar posts no fórum do curso **para** fazer perguntas
 8. **Como** aluno, **quero** comentar em posts **para** interagir com outros alunos
-9. **Como** admin, **quero** criar anúncios **para** comunicar com a comunidade
+9. **Como** admin, **quero** criar avisos **para** comunicar com a comunidade
 10. **Como** instrutor, **quero** ver quantos alunos se inscreveram no meu curso **para** acompanhar engajamento
 
 ---
@@ -312,7 +312,7 @@ Lançar uma versão mínima funcional que permita:
 
 **Sprint 5-6 (4 semanas):**
 - Fórum básico
-- Anúncios simples
+- Avisos simples
 - Dashboard básico para instrutor
 - Testes e ajustes
 
@@ -361,7 +361,7 @@ O MVP está pronto quando:
 - ✅ Alunos conseguem assistir aulas dos cursos em que estão inscritos
 - ✅ Alunos conseguem marcar progresso (aulas concluídas)
 - ✅ Alunos conseguem participar do fórum (criar posts e comentar)
-- ✅ Admins conseguem criar anúncios
+- ✅ Admins conseguem criar avisos
 - ✅ Instrutores conseguem ver número de alunos inscritos
 - ✅ Sistema funciona em dispositivos móveis (responsivo)
 

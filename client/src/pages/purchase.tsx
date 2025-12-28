@@ -4,7 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useCourse } from '@/hooks/use-courses';
 import { getCourseCoverImageUrl } from '@/hooks/use-courses';
-import { Loader2, Lock, Check, ArrowRight } from 'lucide-react';
+import { useUnlockPage } from '@/hooks/use-unlock-pages';
+import { Loader2, Lock, Check, ArrowRight, Gift } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 
@@ -22,6 +23,7 @@ export default function PurchasePage() {
   }, []);
 
   const { data: course, isLoading } = useCourse(courseId || 0);
+  const { data: unlockPage } = useUnlockPage(courseId || 0);
 
   if (!courseId) {
     return (
@@ -80,12 +82,38 @@ export default function PurchasePage() {
     );
   }
 
-  const coverImageUrl = getCourseCoverImageUrl(course);
+  const coverImageUrl = unlockPage?.hero_image_url || getCourseCoverImageUrl(course);
+  const pageTitle = unlockPage?.title || course.title;
+  const pageDescription = unlockPage?.description || course.description;
+  const features = (Array.isArray(unlockPage?.features) ? unlockPage.features : []) || [
+    'Acesso completo ao conteúdo do curso',
+    'Suporte da comunidade',
+    'Acesso vitalício',
+  ];
+  // Converter bônus para o formato { name, price }, suportando formato legado (string)
+  const bonus = Array.isArray(unlockPage?.bonus) 
+    ? unlockPage.bonus.map((b: any) => {
+        if (typeof b === 'string') {
+          return { name: b, price: '' };
+        } else if (b && typeof b === 'object' && 'name' in b) {
+          return { name: b.name || '', price: b.price || '' };
+        }
+        return null;
+      }).filter(Boolean) as { name: string; price: string }[]
+    : [];
+  const buttonText = unlockPage?.button_text || 'Desbloquear Agora';
+  const priceText = unlockPage?.price_text || 'R$ 0,00';
+  const bonusValue = unlockPage?.bonus_value;
+  const guaranteeText = unlockPage?.guarantee_text || 'Garantia de 7 dias ou seu dinheiro de volta';
+  const paymentInfo = unlockPage?.payment_info || 'Pagamento seguro e protegido';
 
   const handlePurchase = () => {
-    // TODO: Integrar com Stripe ou outro gateway de pagamento
-    // Por enquanto, apenas mostra mensagem
-    alert('Integração de pagamento será implementada em breve. Por enquanto, entre em contato para adquirir o curso.');
+    if (unlockPage?.checkout_url) {
+      window.open(unlockPage.checkout_url, '_blank');
+    } else {
+      // TODO: Integrar com Stripe ou outro gateway de pagamento
+      alert('Integração de pagamento será implementada em breve. Por enquanto, entre em contato para adquirir o curso.');
+    }
   };
 
   return (
@@ -109,29 +137,56 @@ export default function PurchasePage() {
             )}
 
             <div>
-              <h1 className="text-3xl font-heading font-bold mb-4">{course.title}</h1>
-              {course.description && (
-                <p className="text-muted-foreground leading-relaxed">{course.description}</p>
+              <h1 className="text-3xl font-heading font-bold mb-4">{pageTitle}</h1>
+              {pageDescription && (
+                <p className="text-muted-foreground leading-relaxed">{pageDescription}</p>
               )}
             </div>
 
-            <div className="space-y-4">
-              <h3 className="font-semibold">O que você vai aprender:</h3>
-              <ul className="space-y-2">
-                <li className="flex items-start gap-2">
-                  <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                  <span className="text-muted-foreground">Acesso completo ao conteúdo do curso</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                  <span className="text-muted-foreground">Suporte da comunidade</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                  <span className="text-muted-foreground">Acesso vitalício</span>
-                </li>
-              </ul>
-            </div>
+            {features && features.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold">O que você vai aprender:</h3>
+                <ul className="space-y-2">
+                  {features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
+                      <span className="text-muted-foreground">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {bonus && bonus.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Gift className="h-5 w-5 text-primary" />
+                  Bônus Exclusivos:
+                </h3>
+                <ul className="space-y-2">
+                  {bonus.map((bonusItem, index) => (
+                    <li key={index} className="flex items-start gap-2">
+                      <Gift className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <span className="text-muted-foreground">
+                        {bonusItem.name}
+                        {bonusItem.price && (
+                          <span className="ml-2 text-sm font-medium text-primary">
+                            ({bonusItem.price})
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {unlockPage?.additional_content && (
+              <div 
+                className="prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: unlockPage.additional_content }}
+              />
+            )}
           </div>
 
           {/* Right Column - Purchase Card */}
@@ -150,13 +205,46 @@ export default function PurchasePage() {
                     <span className="font-medium">{course.title}</span>
                   </div>
                   <Separator />
-                  <div className="flex justify-between items-center text-lg font-bold">
-                    <span>Total</span>
-                    <span className="text-primary">R$ 0,00</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    * Preço será configurado na integração de pagamento
-                  </p>
+                  {bonus && bonus.length > 0 && (
+                    <div className="space-y-2 py-2">
+                      <div className="text-sm font-semibold flex items-center gap-2">
+                        <Gift className="h-4 w-4 text-primary" />
+                        Bônus Inclusos:
+                      </div>
+                      <ul className="space-y-1.5">
+                        {bonus.map((bonusItem, index) => (
+                          <li key={index} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <Gift className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                            <span className="flex-1">
+                              {bonusItem.name}
+                              {bonusItem.price && (
+                                <span className="ml-1 font-medium text-primary">
+                                  ({bonusItem.price})
+                                </span>
+                              )}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {priceText && (
+                    <>
+                      <Separator />
+                      <div className="space-y-1">
+                        {bonusValue && (
+                          <div className="flex justify-between items-center text-sm text-muted-foreground">
+                            <span>De:</span>
+                            <span className="line-through">{bonusValue}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center text-lg font-bold">
+                          <span>{bonusValue ? 'Por:' : 'Total'}</span>
+                          <span className="text-primary">{priceText}</span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <Button 
@@ -165,13 +253,13 @@ export default function PurchasePage() {
                   onClick={handlePurchase}
                 >
                   <Lock className="mr-2 h-4 w-4" />
-                  Comprar Agora
+                  {buttonText}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
 
                 <div className="text-xs text-center text-muted-foreground space-y-1">
-                  <p>Pagamento seguro e protegido</p>
-                  <p>Garantia de 7 dias ou seu dinheiro de volta</p>
+                  {paymentInfo && <p>{paymentInfo}</p>}
+                  {guaranteeText && <p>{guaranteeText}</p>}
                 </div>
               </CardContent>
             </Card>

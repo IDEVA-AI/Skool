@@ -24,7 +24,7 @@ import { useIsPremium } from "@/hooks/use-premium";
 import { getAvatarUrl } from "@/lib/avatar-utils";
 
 const baseNavigation = [
-  { name: "Comunidade", href: "/", icon: Users },
+  { name: "Feed", href: "/", icon: Users },
   { name: "Classroom", href: "/courses", icon: LayoutGrid },
   { name: "Salvos", href: "/saved", icon: BookmarkCheck },
 ];
@@ -213,40 +213,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className={cn("border-t border-border/40", collapsed ? "p-2" : "p-4")}>
         {currentUser && (
           <>
-            <div className={cn("flex items-center rounded-lg bg-muted/30 mb-3", collapsed ? "justify-center p-0 bg-transparent" : "gap-3 p-2")}>
+            <button
+              onClick={() => setLocation(getLinkWithCommunity('/profile'))}
+              className={cn(
+                "flex items-center rounded-lg bg-muted/30 mb-3 w-full transition-colors hover:bg-muted/50 cursor-pointer",
+                collapsed ? "justify-center p-0 bg-transparent" : "gap-3 p-2"
+              )}
+            >
               <Avatar className="h-9 w-9 border border-border">
                 <AvatarImage src={currentUser.avatar} />
                 <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
               {!collapsed && (
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden text-left">
                   <p className="text-sm font-medium truncate">{currentUser.name}</p>
                   <p className="text-xs text-muted-foreground truncate">
                     {currentUser.isPremium ? "Membro Premium" : "Plano Gratuito"}
                   </p>
                 </div>
               )}
-            </div>
-            <div className={cn("grid gap-2", collapsed ? "grid-cols-1" : "grid-cols-2")}>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className={cn("text-xs text-muted-foreground", collapsed ? "h-8 w-full justify-center px-0" : "w-full justify-start px-2 h-8")}
-                onClick={() => setLocation(getLinkWithCommunity('/profile'))}
-              >
-                <Settings className={cn("h-3 w-3", !collapsed && "mr-2")} />
-                {!collapsed && "Config"}
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleSignOut}
-                className={cn("text-xs text-muted-foreground hover:text-destructive", collapsed ? "h-8 w-full justify-center px-0" : "w-full justify-start px-2 h-8")}
-              >
-                <LogOut className={cn("h-3 w-3", !collapsed && "mr-2")} />
-                {!collapsed && "Sair"}
-              </Button>
-            </div>
+            </button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleSignOut}
+              className={cn(
+                "text-xs text-muted-foreground hover:text-destructive w-full",
+                collapsed ? "h-8 justify-center px-0" : "justify-start px-2 h-8"
+              )}
+            >
+              <LogOut className={cn("h-3 w-3", !collapsed && "mr-2")} />
+              {!collapsed && "Sair"}
+            </Button>
           </>
         )}
       </div>
@@ -315,10 +313,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <NotificationDropdown />
                 
                 {currentUser && (
-                  <Avatar className="h-9 w-9 border border-border ml-2">
-                    <AvatarImage src={currentUser.avatar} />
-                    <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                  </Avatar>
+                  <button 
+                    className="ml-2 cursor-pointer"
+                    onClick={() => setLocation(getLinkWithCommunity('/profile'))}
+                  >
+                    <Avatar className="h-9 w-9 border border-border hover:opacity-80 transition-opacity">
+                      <AvatarImage src={currentUser.avatar} />
+                      <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                    </Avatar>
+                  </button>
                 )}
             </div>
         </div>

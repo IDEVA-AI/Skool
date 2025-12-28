@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, ChevronDown, ChevronUp, Edit, Trash2, X, Check, MoreHorizontal } from 'lucide-react';
 import { Comment } from '@/types/social';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ReactionButton } from './reaction-button';
+import { ReactionBar } from './reaction-bar';
 import { useReactions } from '@/hooks/use-reactions';
 import { ReactionType } from '@/types/social';
-import { CommentComposer } from './comment-composer';
 import { CommentList } from './comment-list';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,54 +16,52 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserRole } from '@/hooks/use-user-role';
 import { canComment, Comment as CommentPermission } from '@/lib/permissions';
+import { useSocialContextSafe } from './social-context';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 interface CommentItemProps {
   comment: Comment;
-  currentUserId: string;
-  currentUserName: string;
+  currentUserId?: string;
+  currentUserName?: string;
   depth?: number;
   maxDepth?: number;
   onReply: (content: string, parentId: string) => void;
+  onReplyClick?: (commentId: string, authorName: string) => void;
   onReactionChange?: (commentId: string, reactions: Array<{ id: string; type: ReactionType; userId: string; userName: string }>) => void;
 }
 
-export function CommentItem({
+function CommentItem({
   comment,
-  currentUserId,
-  currentUserName,
+  currentUserId: propUserId,
+  currentUserName: propUserName,
   depth = 0,
   maxDepth = 10,
   onReply,
+  onReplyClick,
   onReactionChange,
 }: CommentItemProps) {
   const [showReplies, setShowReplies] = useState(true);
-  const [showComposer, setShowComposer] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
   const updateCommentMutation = useUpdateComment();
   const deleteCommentMutation = useDeleteComment();
   const { toast } = useToast();
   const { user } = useAuth();
   const { data: userRole } = useUserRole();
+  const socialContext = useSocialContextSafe();
 
-  // Converter Comment para formato de permissão
+  // Usar contexto se disponível, senão usar props (compatibilidade)
+  const currentUserId = propUserId || socialContext?.currentUser?.id || '';
+  const currentUserName = propUserName || socialContext?.currentUser?.name || 'Usuário';
+
+  // Verificar permissões
   const commentForPermission: CommentPermission = {
     id: comment.id,
     authorId: comment.authorId,
@@ -72,35 +69,25 @@ export function CommentItem({
     createdAt: comment.createdAt,
   };
 
-  // Verificar permissões usando o sistema centralizado
   const canUpdate = canComment(user, userRole || null, 'update', commentForPermission);
   const canDelete = canComment(user, userRole || null, 'delete', commentForPermission);
-  const canModerate = canComment(user, userRole || null, 'moderate', commentForPermission);
-  const isAdmin = userRole === 'admin';
+  const showMenu = canUpdate || canDelete;
   
-  // Mostrar menu apenas se tiver permissões
-  const showMenu = canUpdate || canDelete || (isAdmin && canModerate);
-
-  const { reactions, reactionCounts, userReaction, toggleReaction } = useReactions({
+  const { reactions, userReaction, toggleReaction } = useReactions({
     initialReactions: comment.reactions,
     currentUserId,
     currentUserName,
   });
 
-  // Sync reactions changes with parent (for API integration)
+  // Sync reactions changes with parent
   useEffect(() => {
     if (!onReactionChange) return;
     
-    // Compare reactions arrays
     const hasChanges = 
       reactions.length !== comment.reactions.length ||
       reactions.some((r, i) => {
         const oldR = comment.reactions[i];
         return !oldR || r.type !== oldR.type || r.userId !== oldR.userId;
-      }) ||
-      comment.reactions.some((r, i) => {
-        const newR = reactions[i];
-        return !newR || r.type !== newR.type || r.userId !== newR.userId;
       });
     
     if (hasChanges) {
@@ -111,13 +98,10 @@ export function CommentItem({
   const hasReplies = comment.replies && comment.replies.length > 0;
   const canReply = depth < maxDepth;
 
-  const handleReaction = (type: ReactionType) => {
-    toggleReaction(type);
-  };
-
-  const handleReply = (content: string) => {
-    onReply(content, comment.id);
-    setShowComposer(false);
+  const handleReplyClick = () => {
+    if (onReplyClick) {
+      onReplyClick(comment.id, comment.authorName);
+    }
   };
 
   const handleEdit = () => {
@@ -133,53 +117,33 @@ export function CommentItem({
         commentId: parseInt(comment.id),
         content: editContent.trim(),
       });
-
-      toast({
-        title: 'Comentário atualizado!',
-        description: 'Seu comentário foi atualizado com sucesso',
-      });
-
+      toast({ title: 'Comentário atualizado!' });
       setIsEditing(false);
     } catch (error: any) {
       toast({
         title: 'Erro ao atualizar',
-        description: error.message || 'Não foi possível atualizar o comentário',
+        description: error.message || 'Tente novamente',
         variant: 'destructive',
       });
     }
-  };
-
-  const handleCancelEdit = () => {
-    setEditContent(comment.content);
-    setIsEditing(false);
   };
 
   const handleDelete = async () => {
     try {
-      await deleteCommentMutation.mutateAsync({
-        commentId: parseInt(comment.id),
-      });
-
-      toast({
-        title: 'Comentário deletado',
-        description: 'O comentário foi removido com sucesso',
-      });
-
-      setShowDeleteDialog(false);
+      await deleteCommentMutation.mutateAsync({ commentId: parseInt(comment.id) });
+      toast({ title: 'Comentário deletado' });
     } catch (error: any) {
       toast({
         title: 'Erro ao deletar',
-        description: error.message || 'Não foi possível deletar o comentário',
+        description: error.message || 'Tente novamente',
         variant: 'destructive',
       });
     }
+    setShowDeleteConfirm(false);
   };
 
-  // Atualizar editContent quando comment.content mudar
   useEffect(() => {
-    if (!isEditing) {
-      setEditContent(comment.content);
-    }
+    if (!isEditing) setEditContent(comment.content);
   }, [comment.content, isEditing]);
 
   const initials = comment.authorName
@@ -191,39 +155,40 @@ export function CommentItem({
 
   return (
     <div className={cn(
-      'space-y-3',
-      depth > 0 && 'ml-6 pl-4 border-l-2 border-primary/20 hover:border-primary/40 transition-colors'
+      'space-y-2',
+      depth > 0 && 'ml-6 pl-4 border-l-2 border-border/30 hover:border-primary/30 transition-colors'
     )}>
-      <div className="flex gap-3">
-        <Avatar className="h-8 w-8 ring-1 ring-border/50 shrink-0">
+      <div className="flex gap-3 group">
+        <Avatar className="h-8 w-8 ring-1 ring-border/30 shrink-0">
           <AvatarImage src={comment.authorAvatar} alt={comment.authorName} />
-          <AvatarFallback>{initials}</AvatarFallback>
+          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
 
-        <div className="flex-1 space-y-2">
-          <div className="space-y-1">
+        <div className="flex-1 min-w-0">
+          {/* Header e Menu */}
             <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm text-foreground">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="font-semibold text-sm text-foreground truncate">
                   {comment.authorName}
                 </span>
-                <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground shrink-0">
                   {formatDistanceToNow(comment.createdAt, { addSuffix: true, locale: ptBR })}
                 </span>
               </div>
+            
               {showMenu && !isEditing && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuContent align="end" className="w-32">
                     {canUpdate && (
                       <DropdownMenuItem onClick={handleEdit}>
                         <Edit className="h-4 w-4 mr-2" />
@@ -232,7 +197,7 @@ export function CommentItem({
                     )}
                     {canDelete && (
                       <DropdownMenuItem
-                        onClick={() => setShowDeleteDialog(true)}
+                      onClick={() => setShowDeleteConfirm(true)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
@@ -243,19 +208,20 @@ export function CommentItem({
                 </DropdownMenu>
               )}
             </div>
+
+          {/* Conteúdo */}
             {isEditing ? (
-              <div className="space-y-2">
+            <div className="mt-2 space-y-2">
                 <Textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
-                  className="min-h-[80px] text-sm"
+                className="min-h-[60px] text-sm resize-none"
                   disabled={updateCommentMutation.isPending}
                   autoFocus
                 />
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    variant="outline"
                     onClick={handleSaveEdit}
                     disabled={updateCommentMutation.isPending || !editContent.trim()}
                     className="h-7 text-xs"
@@ -266,7 +232,7 @@ export function CommentItem({
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={handleCancelEdit}
+                  onClick={() => setIsEditing(false)}
                     disabled={updateCommentMutation.isPending}
                     className="h-7 text-xs"
                   >
@@ -276,40 +242,26 @@ export function CommentItem({
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed">
+            <>
+              <p className="text-sm text-foreground/90 whitespace-pre-line leading-relaxed mt-1">
                 {comment.content}
               </p>
-            )}
-          </div>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
-              <ReactionButton
-                type="like"
-                count={reactionCounts.like}
-                isActive={userReaction === 'like'}
-                onClick={() => handleReaction('like')}
-              />
-              <ReactionButton
-                type="love"
-                count={reactionCounts.love}
-                isActive={userReaction === 'love'}
-                onClick={() => handleReaction('love')}
-              />
-              <ReactionButton
-                type="laugh"
-                count={reactionCounts.laugh}
-                isActive={userReaction === 'laugh'}
-                onClick={() => handleReaction('laugh')}
-              />
-            </div>
+              {/* Ações */}
+              <div className="flex items-center gap-1 mt-2">
+                <ReactionBar
+                  reactions={reactions}
+                  userReaction={userReaction}
+                  onReact={toggleReaction}
+                  compact
+                />
 
-            {canReply && !isEditing && (
+                {canReply && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setShowComposer(!showComposer)}
-                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={handleReplyClick}
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground rounded-full"
               >
                 <MessageSquare className="h-3 w-3 mr-1" />
                 Responder
@@ -321,38 +273,54 @@ export function CommentItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => setShowReplies(!showReplies)}
-                className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                    className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground rounded-full"
               >
                 {showReplies ? (
                   <>
                     <ChevronUp className="h-3 w-3 mr-1" />
-                    Ocultar respostas
+                        Ocultar
                   </>
                 ) : (
                   <>
                     <ChevronDown className="h-3 w-3 mr-1" />
-                    Mostrar {comment.replies?.length} resposta{comment.replies?.length !== 1 ? 's' : ''}
+                        {comment.replies?.length} resposta{comment.replies?.length !== 1 ? 's' : ''}
                   </>
                 )}
               </Button>
             )}
           </div>
+            </>
+          )}
 
-          {showComposer && canReply && (
-            <div className="pt-2">
-              <CommentComposer
-                currentUserId={currentUserId}
-                currentUserName={currentUserName}
-                parentId={comment.id}
-                placeholder="Escreva uma resposta..."
-                onSubmit={handleReply}
-                onCancel={() => setShowComposer(false)}
-              />
+          {/* Confirmação de delete inline */}
+          {showDeleteConfirm && (
+            <div className="mt-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+              <p className="text-sm text-destructive mb-2">Deletar este comentário?</p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteCommentMutation.isPending}
+                  className="h-7 text-xs"
+                >
+                  {deleteCommentMutation.isPending ? 'Deletando...' : 'Confirmar'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="h-7 text-xs"
+                >
+                  Cancelar
+                </Button>
+              </div>
             </div>
           )}
         </div>
       </div>
 
+      {/* Respostas */}
       {hasReplies && showReplies && (
         <CommentList
           comments={comment.replies || []}
@@ -361,32 +329,17 @@ export function CommentItem({
           depth={depth + 1}
           maxDepth={maxDepth}
           onReply={onReply}
+          onReplyClick={onReplyClick}
           onReactionChange={onReactionChange}
         />
       )}
-
-      {/* Dialog de confirmação de exclusão */}
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deletar comentário?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta ação não pode ser desfeita. O comentário será permanentemente removido.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              disabled={deleteCommentMutation.isPending}
-            >
-              {deleteCommentMutation.isPending ? 'Deletando...' : 'Deletar'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
 
+CommentItem.displayName = 'CommentItem';
+
+const CommentItemMemo = memo(CommentItem);
+CommentItemMemo.displayName = 'CommentItem';
+
+export { CommentItemMemo as CommentItem };

@@ -1,13 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Em desenvolvimento, permite fallback para valores padrão
-// Em produção, exige variáveis de ambiente
-const isDevelopment = import.meta.env.DEV;
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || (isDevelopment ? 'https://oqiwumslgcggrybdpqcr.supabase.co' : undefined);
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || (isDevelopment ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9xaXd1bXNsZ2NnZ3J5YmRwcWNyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUxOTUzMDQsImV4cCI6MjA4MDc3MTMwNH0.3Jnb9I7h-DbfP8kR8_CvofPkzLGoJsvZ2WMQOmnUM1E' : undefined);
+// Exige variáveis de ambiente em todos os ambientes
+// Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no arquivo .env.local
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY');
+  throw new Error(
+    'Missing Supabase environment variables. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your .env.local file'
+  );
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -165,6 +166,19 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Database['public']['Tables']['announcements']['Insert']>;
+      };
+      course_communities: {
+        Row: {
+          id: number;
+          course_id: number;
+          community_id: string;
+          created_at: string | null;
+        };
+        Insert: Omit<Database['public']['Tables']['course_communities']['Row'], 'id' | 'created_at'> & {
+          id?: number;
+          created_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['course_communities']['Insert']>;
       };
     };
   };

@@ -3,8 +3,12 @@ import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
+import Emoji from '@tiptap/extension-emoji';
+import { ResizableImage } from '@/components/tiptap-extensions/resizable-image';
+import { ResizableIframe } from '@/components/tiptap-extensions/resizable-iframe';
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { TextSelection } from '@tiptap/pm/state';
 import { 
   Bold, 
   Italic, 
@@ -18,8 +22,15 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Image as ImageIcon,
+  Smile,
+  Loader2
 } from 'lucide-react';
+import { useStorageUpload } from '@/hooks/use-storage-upload';
+import { useAuth } from '@/hooks/use-auth';
+import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -47,6 +58,11 @@ export function TipTapEditor({
 }: TipTapEditorProps) {
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
+  const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const { user } = useAuth();
+  const { uploadFile, uploading } = useStorageUpload();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -60,6 +76,17 @@ export function TipTapEditor({
         HTMLAttributes: {
           class: 'text-primary underline',
         },
+      }),
+      ResizableImage.configure({
+        inline: true,
+        allowBase64: false,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg my-4',
+        },
+      }),
+      ResizableIframe,
+      Emoji.configure({
+        enableEmoticons: true,
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -77,8 +104,189 @@ export function TipTapEditor({
       attributes: {
         class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[120px] px-4 py-3 text-foreground',
       },
+      handleKeyDown: (view, event) => {
+        // Permitir Ctrl+A (ou Cmd+A no Mac) para selecionar tudo
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+          const { state, dispatch } = view;
+          const { tr } = state;
+          
+          // Criar uma seleção de texto que cobre todo o documento
+          const { doc } = state;
+          const selection = TextSelection.create(doc, 0, doc.content.size);
+          
+          dispatch(tr.setSelection(selection));
+          event.preventDefault();
+          return true; // Indica que o evento foi tratado
+        }
+        return false; // Para outros eventos, permite comportamento padrão
+      },
     },
   });
+
+  // Definir handleImageUpload antes de ser usado nos useEffects
+  const handleImageUpload = useCallback(async (file: File) => {
+    if (!editor || !user) return;
+
+    // Validar tipo de arquivo
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast({
+        title: 'Tipo de arquivo inválido',
+        description: 'Apenas imagens (JPG, PNG, GIF, WEBP) são permitidas',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validar tamanho (10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: 'Arquivo muito grande',
+        description: 'O tamanho máximo é 10MB',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Upload para Supabase Storage usando o bucket course-media
+      // O hook já gerencia o bucket, só precisamos passar o path
+      const imageUrl = await uploadFile(file, `posts/${user.id}`);
+      
+      if (imageUrl) {
+        // Inserir imagem no editor
+        editor.chain().focus().setImage({ src: imageUrl }).run();
+        toast({
+          title: 'Imagem adicionada',
+          description: 'A imagem foi inserida no post',
+        });
+      } else {
+        throw new Error('Falha no upload da imagem');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao fazer upload',
+        description: error.message || 'Não foi possível fazer upload da imagem',
+        variant: 'destructive',
+      });
+    }
+  }, [editor, user, uploadFile, toast]);
+
+  const handleImageButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleImageUpload(file);
+    }
+    // Resetar input para permitir selecionar o mesmo arquivo novamente
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    if (editor) {
+      editor.chain().focus().insertContent(emoji).run();
+      setEmojiPickerOpen(false);
+    }
+  };
+
+  // Lista de emojis comuns para o picker simples
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇',
+    '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚',
+    '😋', '😛', '😝', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩',
+    '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😣',
+    '😖', '😫', '😩', '🥺', '😢', '😭', '😤', '😠', '😡', '🤬',
+    '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👏', '🙌', '👐',
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
+    '💯', '🔥', '⭐', '🌟', '✨', '💫', '💥', '💢', '💤', '💨',
+  ];
+
+  // Função para detectar e converter URLs de vídeo em iframes
+  const convertVideoUrlToIframe = useCallback((url: string): { src: string; width?: number; height?: number } | null => {
+    // YouTube
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const youtubeMatch = url.match(youtubeRegex);
+    if (youtubeMatch) {
+      return {
+        src: `https://www.youtube.com/embed/${youtubeMatch[1]}`,
+        width: 560,
+        height: 315,
+      };
+    }
+
+    // Vimeo
+    const vimeoRegex = /(?:vimeo\.com\/)(?:.*\/)?(\d+)/;
+    const vimeoMatch = url.match(vimeoRegex);
+    if (vimeoMatch) {
+      return {
+        src: `https://player.vimeo.com/video/${vimeoMatch[1]}`,
+        width: 560,
+        height: 315,
+      };
+    }
+
+    return null;
+  }, []);
+
+  // Adicionar listener para colar imagens e detectar URLs de vídeo
+  useEffect(() => {
+    if (!editor || !user) return;
+
+    const handlePaste = async (event: ClipboardEvent) => {
+      // Verificar se há imagens no clipboard
+      const items = event.clipboardData?.items;
+      if (!items) return;
+
+      // Verificar se há texto (URL de vídeo)
+      const text = event.clipboardData?.getData('text/plain');
+      if (text) {
+        const videoData = convertVideoUrlToIframe(text.trim());
+        if (videoData) {
+          event.preventDefault();
+          event.stopPropagation();
+          editor.chain().focus().insertContent({
+            type: 'iframe',
+            attrs: videoData,
+          }).run();
+          toast({
+            title: 'Vídeo inserido',
+            description: 'O vídeo foi inserido no post',
+          });
+          return;
+        }
+      }
+
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        
+        // Verificar se é uma imagem
+        if (item.type.indexOf('image') !== -1) {
+          event.preventDefault();
+          event.stopPropagation();
+          
+          const file = item.getAsFile();
+          if (file) {
+            // Fazer upload e inserir a imagem
+            await handleImageUpload(file);
+          }
+          return;
+        }
+      }
+    };
+
+    // Adicionar listener no elemento do editor
+    const editorElement = editor.view.dom;
+    editorElement.addEventListener('paste', handlePaste);
+    
+    return () => {
+      editorElement.removeEventListener('paste', handlePaste);
+    };
+  }, [editor, user, handleImageUpload, convertVideoUrlToIframe, toast]);
 
   // Atualizar conteúdo quando value mudar externamente
   useEffect(() => {
@@ -309,6 +517,68 @@ export function TipTapEditor({
             <LinkIcon className="h-4 w-4" />
           </Button>
         </div>
+
+        <div className="h-6 w-px bg-border mx-1" />
+
+        {/* Imagem */}
+        <div className="flex items-center gap-1">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            className="hidden"
+            onChange={handleFileChange}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={handleImageButtonClick}
+            disabled={uploading || !user}
+            title="Inserir imagem"
+          >
+            {uploading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImageIcon className="h-4 w-4" />
+            )}
+          </Button>
+        </div>
+
+        <div className="h-6 w-px bg-border mx-1" />
+
+        {/* Emoji */}
+        <div className="flex items-center gap-1">
+          <Popover open={emojiPickerOpen} onOpenChange={setEmojiPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                title="Inserir emoji"
+              >
+                <Smile className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-2" align="start">
+              <div className="grid grid-cols-10 gap-1 max-h-64 overflow-y-auto">
+                {commonEmojis.map((emoji, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    className="text-xl p-1 hover:bg-muted rounded transition-colors"
+                    onClick={() => handleEmojiSelect(emoji)}
+                    title={emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
 
       {/* Link Dialog */}
@@ -429,6 +699,36 @@ export function TipTapEditor({
         }
         .ProseMirror em {
           font-style: italic;
+        }
+        .ProseMirror img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin: 1rem 0;
+          display: block;
+        }
+        .ProseMirror img.ProseMirror-selectednode {
+          outline: 2px solid hsl(var(--primary));
+          outline-offset: 2px;
+        }
+        .ProseMirror iframe {
+          border-radius: 0.5rem;
+          margin-top: 1rem;
+          margin-bottom: 1rem;
+          display: block;
+        }
+        .ProseMirror iframe.ProseMirror-selectednode {
+          outline: 2px solid hsl(var(--primary));
+          outline-offset: 2px;
+        }
+        /* Estilos para handles de redimensionamento */
+        .ProseMirror [data-node-view-wrapper] {
+          position: relative;
+          display: inline-block;
+        }
+        .ProseMirror [data-node-view-wrapper].ProseMirror-selectednode {
+          outline: 3px solid hsl(var(--primary));
+          outline-offset: 2px;
         }
       `}</style>
     </div>

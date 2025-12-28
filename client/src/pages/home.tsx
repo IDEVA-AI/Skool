@@ -14,9 +14,8 @@ import { useCourseProgress } from "@/hooks/use-course-content";
 import { useToast } from "@/hooks/use-toast";
 import { useIsAdmin } from "@/hooks/use-user-role";
 import { useProfile } from "@/hooks/use-profile";
-import { formatDistanceToNow } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { AnnouncementForm } from "@/components/announcement-form";
+import { AnnouncementBanner } from "@/components/announcement-banner";
 import { Plus } from "lucide-react";
 import { useSelectedCommunity } from "@/contexts/community-context";
 import { useMemo } from "react";
@@ -182,45 +181,41 @@ export default function Home() {
 
       {/* Sidebar Widgets */}
       <div className="space-y-6">
-        <Card className="bg-primary/5 border-primary/10 shadow-none">
-          <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-              <h3 className="font-heading font-semibold text-lg text-primary">Anúncios</h3>
-              {isAdmin && (
-                <AnnouncementForm 
-                  mode="create"
-                  trigger={
-                    <Button variant="ghost" size="sm" className="h-7 text-xs">
-                      <Plus className="h-3 w-3 mr-1" />
-                      Criar
-                    </Button>
-                  }
-                />
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {announcements && announcements.length > 0 ? (
-              announcements.map((announcement: any, index: number) => {
-                const announcementDate = new Date(announcement.created_at);
-                return (
-                  <div key={announcement.id}>
-            <div className="space-y-2">
-                      <span className="text-xs font-medium text-muted-foreground block">
-                        {formatDistanceToNow(announcementDate, { addSuffix: true, locale: ptBR })}
-                      </span>
-                      <p className="text-sm font-medium">{announcement.title}</p>
-                      <p className="text-xs text-muted-foreground">{announcement.content}</p>
-            </div>
-                    {index < announcements.length - 1 && <div className="h-px bg-primary/10 my-4" />}
-            </div>
-                );
-              })
-            ) : (
-              <p className="text-sm text-muted-foreground">Nenhum anúncio no momento</p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-heading font-semibold text-lg text-primary">Avisos</h3>
+            {isAdmin && (
+              <AnnouncementForm 
+                mode="create"
+                trigger={
+                  <Button variant="ghost" size="sm" className="h-7 text-xs">
+                    <Plus className="h-3 w-3 mr-1" />
+                    Criar
+                  </Button>
+                }
+              />
             )}
-          </CardContent>
-        </Card>
+          </div>
+          {announcements && announcements.length > 0 ? (
+            <div className="space-y-4">
+              {announcements
+                .filter((announcement: any) => announcement && announcement.id)
+                .map((announcement: any) => (
+                  <AnnouncementBanner
+                    key={announcement.id}
+                    announcement={announcement}
+                    isAdmin={isAdmin}
+                  />
+                ))}
+            </div>
+          ) : (
+            <Card className="bg-primary/5 border-primary/10 shadow-none">
+              <CardContent className="py-6">
+                <p className="text-sm text-muted-foreground text-center">Nenhum aviso no momento</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         <Card className="border-border/50 shadow-sm">
           <CardHeader className="pb-3">

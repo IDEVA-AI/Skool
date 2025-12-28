@@ -75,12 +75,12 @@ JOIN modules m ON m.id = l.module_id
 JOIN courses c ON c.id = m.course_id;
 ```
 
-## Passo 4: Criar Anúncios (Opcional)
+## Passo 4: Criar Avisos (Opcional)
 
-Se você é admin, pode criar anúncios via interface da aplicação ou SQL:
+Se você é admin, pode criar avisos via interface da aplicação ou SQL:
 
 ```sql
--- Criar anúncio de exemplo
+-- Criar aviso de exemplo
 INSERT INTO announcements (title, content, created_by, is_active)
 SELECT 
   'Bem-vindo à Plataforma!',
@@ -100,7 +100,7 @@ LIMIT 1;
 4. **Visualização**: Acesse o curso e veja os módulos/aulas
 5. **Progresso**: Marque aulas como concluídas
 6. **Fórum**: Crie posts e comentários nos cursos
-7. **Anúncios**: Se for admin, crie anúncios na página inicial
+7. **Avisos**: Se for admin, crie avisos na página inicial
 8. **Dashboard**: Se for instructor, acesse `/instructor` para ver estatísticas
 
 ## Troubleshooting

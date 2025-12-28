@@ -81,7 +81,7 @@ SELECT
   (SELECT COUNT(*) FROM courses) as cursos,
   (SELECT COUNT(*) FROM modules) as modulos,
   (SELECT COUNT(*) FROM lessons) as aulas,
-  (SELECT COUNT(*) FROM announcements WHERE is_active = true) as anuncios;
+  (SELECT COUNT(*) FROM announcements WHERE is_active = true) as avisos;
 ```
 
 ## 🎯 Testar Fluxo Completo
@@ -95,7 +95,7 @@ Após criar o usuário e executar o seed:
 5. **Marcar Concluída**: Marque uma aula como concluída
 6. **Criar Post**: Na home (`/`), crie um post selecionando um curso
 7. **Comentar**: Abra um post e comente
-8. **Criar Anúncio**: Se for admin, crie um anúncio na home
+8. **Criar Aviso**: Se for admin, crie um aviso na home
 9. **Dashboard**: Acesse `/instructor` para ver estatísticas
 
 ## 📁 Arquivos Criados

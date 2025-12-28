@@ -2,12 +2,13 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { GripVertical } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { GripVertical, Eye, Edit, Trash2, Users } from 'lucide-react';
 import { Link } from 'wouter';
-import { Eye, Edit, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useCourseCommunities } from '@/hooks/use-course-communities';
 
 interface DraggableCourseRowProps {
   course: {
@@ -22,6 +23,7 @@ interface DraggableCourseRowProps {
 }
 
 export function DraggableCourseRow({ course, onEdit, onDelete }: DraggableCourseRowProps) {
+  const { data: communities = [] } = useCourseCommunities(course.id);
   const {
     attributes,
     listeners,
@@ -66,9 +68,23 @@ export function DraggableCourseRow({ course, onEdit, onDelete }: DraggableCourse
         </div>
       </TableCell>
       <TableCell>
-        <span className="text-sm text-muted-foreground">
-          {course.community_id || '-'}
-        </span>
+        {communities.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {communities.slice(0, 2).map((comm: any) => (
+              <Badge key={comm.id} variant="secondary" className="text-xs">
+                <Users className="h-3 w-3 mr-1" />
+                {comm.name}
+              </Badge>
+            ))}
+            {communities.length > 2 && (
+              <Badge variant="outline" className="text-xs">
+                +{communities.length - 2}
+              </Badge>
+            )}
+          </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">-</span>
+        )}
       </TableCell>
       <TableCell>
         <span className="text-sm text-muted-foreground">

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import { useCommunityBySlug, type Community } from '@/hooks/use-communities';
+import { applyColorPreset, type ColorPreset } from '@/lib/color-presets';
 
 interface CommunityContextType {
   selectedCommunity: Community | null;
@@ -57,6 +58,22 @@ export function CommunityProvider({ children }: { children: ReactNode }) {
       setSelectedCommunityState(null);
     }
   }, [community, isLoading, communitySlug]);
+
+  // Aplicar tema de cores quando comunidade mudar
+  useEffect(() => {
+    if (selectedCommunity?.settings) {
+      const theme = (selectedCommunity.settings as any)?.theme;
+      if (theme && typeof theme === 'string') {
+        applyColorPreset(theme as ColorPreset);
+      } else {
+        // Resetar para padrão se não houver tema configurado
+        applyColorPreset('slate');
+      }
+    } else {
+      // Resetar para padrão se não houver comunidade selecionada
+      applyColorPreset('slate');
+    }
+  }, [selectedCommunity]);
 
   const setSelectedCommunity = (community: Community | null) => {
     setSelectedCommunityState(community);

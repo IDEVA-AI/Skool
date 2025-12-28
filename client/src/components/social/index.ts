@@ -1,3 +1,4 @@
+// Core components
 export { PostComponent as Post } from './post';
 export { PostHeader } from './post-header';
 export { PostContent } from './post-content';
@@ -8,9 +9,18 @@ export { Feed } from './feed';
 export { PostComposerSimple } from './post-composer-simple';
 export { PostActions } from './post-actions';
 export { PostActionsMenu } from './post-actions-menu';
+
+// Comments
 export { CommentComposer } from './comment-composer';
 export { CommentList } from './comment-list';
 export { CommentItem } from './comment-item';
-export { ReactionButton } from './reaction-button';
-export { useReactions } from '@/hooks/use-reactions';
 
+// Reactions
+export { ReactionBar } from './reaction-bar';
+export { ReactionButton } from './reaction-button'; // Mantido para compatibilidade
+
+// Context
+export { SocialProvider, useSocialContext, useSocialContextSafe } from './social-context';
+
+// Hooks
+export { useReactions } from '@/hooks/use-reactions';

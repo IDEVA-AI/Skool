@@ -2,11 +2,13 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { GripVertical, Eye, Edit, Trash2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { GripVertical, Eye, Edit, Trash2, Users } from 'lucide-react';
 import { Link } from 'wouter';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { useCourseCommunities } from '@/hooks/use-course-communities';
 
 interface DraggableCourseCardProps {
   course: {
@@ -23,6 +25,7 @@ interface DraggableCourseCardProps {
 }
 
 export function DraggableCourseCard({ course, index, onEdit, onDelete }: DraggableCourseCardProps) {
+  const { data: communities = [] } = useCourseCommunities(course.id);
   const {
     attributes,
     listeners,
@@ -74,15 +77,25 @@ export function DraggableCourseCard({ course, index, onEdit, onDelete }: Draggab
           </p>
         )}
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
-          <span>
+        <div className="flex flex-col gap-2 pt-2 border-t">
+          {communities.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {communities.slice(0, 3).map((comm: any) => (
+                <Badge key={comm.id} variant="secondary" className="text-xs">
+                  <Users className="h-3 w-3 mr-1" />
+                  {comm.name}
+                </Badge>
+              ))}
+              {communities.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{communities.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+          <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(course.created_at), { addSuffix: true, locale: ptBR })}
           </span>
-          {course.community_id && (
-            <span className="truncate max-w-[120px]" title={course.community_id}>
-              {course.community_id.slice(0, 8)}...
-            </span>
-          )}
         </div>
 
         <div className="flex items-center gap-2 pt-2">

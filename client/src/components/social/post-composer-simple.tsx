@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TipTapEditor } from '@/components/tiptap-editor';
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
 
 interface PostComposerSimpleProps {
   avatar?: string;
@@ -18,11 +20,13 @@ interface PostComposerSimpleProps {
 }
 
 /**
- * PostComposerSimple - Composer simples que expande ao clicar
+ * PostComposerSimple - Composer simples que abre modal ao clicar
  * 
- * Estados:
- * - Colapsado: mostra apenas input "Escreva algo..."
- * - Expandido: mostra título e editor de conteúdo
+ * Comportamento:
+ * - Mostra apenas input "Escreva algo..." como trigger
+ * - Ao clicar, abre um modal com título e editor de conteúdo
+ * - O campo de título recebe foco automaticamente quando o modal abre
+ * - Modal pode ser fechado clicando fora ou no botão Cancelar
  */
 export function PostComposerSimple({
   avatar,
@@ -33,9 +37,10 @@ export function PostComposerSimple({
   isPublishing = false,
   className,
 }: PostComposerSimpleProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   // Verificar se há conteúdo válido
   const hasTextContent = (html: string): boolean => {
@@ -49,15 +54,25 @@ export function PostComposerSimple({
   const isValid = title.trim().length > 0 && content.trim().length > 0 && hasTextContent(content);
   const isDisabled = isPublishing || !isValid;
 
+  // Focar no campo de título quando o modal abrir
+  useEffect(() => {
+    if (isModalOpen && titleInputRef.current) {
+      // Pequeno delay para garantir que o modal está totalmente renderizado
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isModalOpen]);
+
   const handlePublish = async () => {
     if (isDisabled) return;
 
     try {
       await onPublish(title.trim(), content.trim());
-      // Limpar e colapsar após publicação
+      // Limpar e fechar modal após publicação
       setTitle('');
       setContent('');
-      setIsExpanded(false);
+      setIsModalOpen(false);
     } catch (error) {
       // Erro será tratado pelo componente pai
     }
@@ -66,7 +81,11 @@ export function PostComposerSimple({
   const handleCancel = () => {
     setTitle('');
     setContent('');
-    setIsExpanded(false);
+    setIsModalOpen(false);
+  };
+
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
   };
 
   const initials = name
@@ -77,11 +96,12 @@ export function PostComposerSimple({
     .slice(0, 2);
 
   return (
-    <Card className={cn('border-border/50 shadow-sm overflow-hidden transition-all duration-300', className)}>
-      {!isExpanded ? (
+    <>
+      {/* Trigger Card */}
+      <Card className={cn('border-border/50 shadow-sm overflow-hidden transition-all duration-300', className)}>
         <CardContent 
           className="p-4 flex items-center gap-4 cursor-text" 
-          onClick={() => setIsExpanded(true)}
+          onClick={handleOpenModal}
         >
           <Avatar className="h-10 w-10 shrink-0">
             <AvatarImage src={avatar} />
@@ -96,49 +116,67 @@ export function PostComposerSimple({
             />
           </div>
         </CardContent>
-      ) : (
-        <CardContent className="pt-6 pb-4 px-6 space-y-4 animate-in fade-in zoom-in-95 duration-200">
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-2">
-            <Avatar className="h-10 w-10 shrink-0">
-              <AvatarImage src={avatar} />
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-            <div className="flex items-center gap-1 text-sm">
-              <span className="font-semibold text-foreground">{name}</span>
-              {context && (
-                <>
-                  <span className="text-muted-foreground">publicando em</span>
-                  <span className={cn(
-                    "font-medium",
-                    contextHighlight ? "text-primary" : "text-muted-foreground"
-                  )}>
-                    {context}
-                  </span>
-                </>
-              )}
+      </Card>
+
+      {/* Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+          <VisuallyHidden>
+            <DialogTitle>Criar novo post</DialogTitle>
+          </VisuallyHidden>
+
+          <div className="p-6 space-y-4 overflow-y-auto flex-1">
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-2">
+              <Avatar className="h-10 w-10 shrink-0">
+                <AvatarImage src={avatar} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+              <div className="flex items-center gap-1 text-sm">
+                <span className="font-semibold text-foreground">{name}</span>
+                {context && (
+                  <>
+                    <span className="text-muted-foreground">publicando em</span>
+                    <span className={cn(
+                      "font-medium",
+                      contextHighlight ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {context}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
+
+            {/* Título */}
+            <Input
+              ref={titleInputRef}
+              placeholder="Assunto"
+              className="text-6xl font-bold border-none shadow-none px-0 focus-visible:ring-0 placeholder:text-muted-foreground/50 h-auto py-0"
+              style={{ fontSize: '1.4rem', lineHeight: '1' }}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onKeyDown={(e) => {
+                // Ctrl+A / Cmd+A para selecionar todo o texto
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  e.currentTarget.select();
+                }
+              }}
+            />
+
+            {/* Editor de Conteúdo */}
+            <TipTapEditor
+              placeholder="Escreva algo..."
+              value={content}
+              onChange={setContent}
+              className="border-none shadow-none min-h-[200px]"
+            />
           </div>
 
-          {/* Título */}
-          <Input
-            placeholder="Título"
-            className="text-2xl font-bold border-none shadow-none px-0 focus-visible:ring-0 placeholder:text-muted-foreground/50 h-auto py-0"
-            autoFocus
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-
-          {/* Editor de Conteúdo */}
-          <TipTapEditor
-            placeholder="Escreva algo..."
-            value={content}
-            onChange={setContent}
-            className="border-none shadow-none min-h-[150px]"
-          />
-
           {/* Actions Bar */}
-          <div className="flex items-center justify-between pt-4 border-t border-border/10">
+          <div className="flex items-center justify-between pt-4 px-6 pb-6 border-t border-border/10 bg-background">
             <div className="flex items-center gap-4 text-muted-foreground">
               {/* Placeholder para futuras ações */}
             </div>
@@ -169,9 +207,9 @@ export function PostComposerSimple({
               </Button>
             </div>
           </div>
-        </CardContent>
-      )}
-    </Card>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

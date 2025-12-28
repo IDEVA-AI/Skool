@@ -1,8 +1,8 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode, useState } from 'react';
 import { reportError } from '@/lib/error-reporter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Copy, Check } from 'lucide-react';
 
 interface Props {
   children: ReactNode;
@@ -12,6 +12,58 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+}
+
+// Componente funcional para botão de copiar erro
+function CopyErrorButton({ error }: { error: Error }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const errorText = `${error.toString()}${error.stack ? `\n\n${error.stack}` : ''}`;
+    
+    try {
+      await navigator.clipboard.writeText(errorText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      // Fallback para navegadores mais antigos
+      const textArea = document.createElement('textarea');
+      textArea.value = errorText;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (e) {
+        console.error('Falha ao copiar:', e);
+      }
+      document.body.removeChild(textArea);
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleCopy}
+      className="w-full"
+    >
+      {copied ? (
+        <>
+          <Check className="h-4 w-4 mr-2" />
+          Copiado!
+        </>
+      ) : (
+        <>
+          <Copy className="h-4 w-4 mr-2" />
+          Copiar Erro
+        </>
+      )}
+    </Button>
+  );
 }
 
 /**
@@ -84,15 +136,18 @@ export class ErrorBoundary extends Component<Props, State> {
               </p>
               
               {this.state.error && import.meta.env.DEV && (
-                <details className="text-xs bg-muted p-3 rounded-md">
-                  <summary className="cursor-pointer font-medium mb-2">
-                    Detalhes do erro (apenas em desenvolvimento)
-                  </summary>
-                  <pre className="whitespace-pre-wrap break-words">
-                    {this.state.error.toString()}
-                    {this.state.error.stack && `\n\n${this.state.error.stack}`}
-                  </pre>
-                </details>
+                <div className="space-y-2">
+                  <details className="text-xs bg-muted p-3 rounded-md">
+                    <summary className="cursor-pointer font-medium mb-2">
+                      Detalhes do erro (apenas em desenvolvimento)
+                    </summary>
+                    <pre className="whitespace-pre-wrap break-words select-text">
+                      {this.state.error.toString()}
+                      {this.state.error.stack && `\n\n${this.state.error.stack}`}
+                    </pre>
+                  </details>
+                  <CopyErrorButton error={this.state.error} />
+                </div>
               )}
 
               <div className="flex gap-2">

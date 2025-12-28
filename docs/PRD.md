@@ -9,7 +9,7 @@
 **S-K-O-O-L** - Plataforma de Gestão de Conteúdo e Comunidade para Cursos
 
 ### 1.2 Objetivo
-Criar uma plataforma completa para gerenciar cursos online, comunidades e anúncios, com sistema de níveis de acesso e integração de pagamentos.
+Criar uma plataforma completa para gerenciar cursos online, comunidades e avisos, com sistema de níveis de acesso e integração de pagamentos.
 
 ### 1.3 Público-Alvo
 - Criadores de conteúdo e instrutores
@@ -34,7 +34,7 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 - Fórum de discussão por curso
 - Chat em tempo real
 - Grupos e subcomunidades
-- Sistema de anúncios e notificações
+- Sistema de avisos e notificações
 - Perfis de usuários
 
 #### 2.1.3 Sistema de Níveis de Acesso
@@ -52,8 +52,8 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 - Histórico de transações
 - Reembolsos
 
-#### 2.1.5 Gestão de Anúncios
-- Criação e edição de anúncios
+#### 2.1.5 Gestão de Avisos
+- Criação e edição de avisos
 - Segmentação por curso/comunidade
 - Agendamento de publicações
 - Analytics de engajamento
@@ -101,13 +101,13 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 - **RF027**: Moderação de conteúdo
 - **RF028**: Denúncias e bloqueios
 
-### 3.6 Anúncios
-- **RF029**: Criação de anúncios (texto, imagem, vídeo)
+### 3.6 Avisos
+- **RF029**: Criação de avisos (texto, imagem, vídeo)
 - **RF030**: Segmentação por curso/comunidade/usuário
 - **RF031**: Agendamento de publicações
 - **RF032**: Destaques e banners na plataforma
 - **RF033**: Analytics de visualizações e cliques
-- **RF034**: Edição e remoção de anúncios
+- **RF034**: Edição e remoção de avisos
 
 ### 3.7 Pagamentos
 - **RF035**: Integração com Stripe
@@ -224,7 +224,7 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 - **Community**: Comunidades/Fóruns
 - **Post**: Posts no fórum
 - **Comment**: Comentários em posts
-- **Announcement**: Anúncios da plataforma
+- **Announcement**: Avisos da plataforma
 - **Certificate**: Certificados emitidos
 
 ### 7.2 Relacionamentos
@@ -246,7 +246,7 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 4. **Como** aluno, **quero** comprar um curso **para** ter acesso ao conteúdo
 5. **Como** aluno, **quero** assistir aulas **para** aprender
 6. **Como** aluno, **quero** participar de discussões no fórum **para** interagir com outros alunos
-7. **Como** admin, **quero** criar anúncios **para** comunicar com a comunidade
+7. **Como** admin, **quero** criar avisos **para** comunicar com a comunidade
 
 ### 8.2 Fase 2
 8. **Como** instrutor, **quero** ver analytics de meus cursos **para** entender o desempenho
@@ -289,7 +289,7 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 
 ### 10.2 Riscos de Negócio
 - **Risco**: Concorrência com outras plataformas
-  - **Mitigação**: Focar em diferenciais (comunidade, anúncios, UX)
+  - **Mitigação**: Focar em diferenciais (comunidade, avisos, UX)
 
 - **Risco**: Complexidade de integração de pagamentos
   - **Mitigação**: Começar com uma integração (Stripe), adicionar outras depois
@@ -304,7 +304,7 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 - Sistema de pagamentos (Stripe)
 - Visualização de conteúdo
 - Fórum básico
-- Anúncios simples
+- Avisos simples
 
 ### 11.2 Fase 2 - Melhorias (2-3 meses)
 - Analytics e relatórios
@@ -317,7 +317,7 @@ Criar uma plataforma completa para gerenciar cursos online, comunidades e anúnc
 - Chat em tempo real
 - Assinaturas recorrentes
 - Mobile app (PWA ou nativo)
-- Recursos avançados de anúncios
+- Recursos avançados de avisos
 - Multi-idioma
 
 ---

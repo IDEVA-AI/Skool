@@ -1,7 +1,7 @@
 import { MessageSquare, Share2, Bookmark, BookmarkCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect } from 'react';
-import { ReactionButton } from './reaction-button';
+import { ReactionBar } from './reaction-bar';
 import { useReactions } from '@/hooks/use-reactions';
 import { ReactionType } from '@/types/social';
 import { useSavePost, useUnsavePost, useSavedPostIds } from '@/hooks/use-saved-posts';
@@ -9,13 +9,14 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { shareContent, getPostUrl } from '@/lib/share';
 import { useSelectedCommunity } from '@/contexts/community-context';
+import { useSocialContextSafe } from './social-context';
 
 interface PostActionsProps {
   postId: string;
   reactions?: Array<{ id: string; type: ReactionType; userId: string; userName: string }>;
   commentCount: number;
-  currentUserId: string;
-  currentUserName: string;
+  currentUserId?: string;
+  currentUserName?: string;
   onCommentClick?: () => void;
   onShareClick?: () => void;
   onReactionChange?: (reactions: Array<{ id: string; type: ReactionType; userId: string; userName: string }>) => void;
@@ -27,8 +28,8 @@ export function PostActions({
   postId,
   reactions = [],
   commentCount,
-  currentUserId,
-  currentUserName,
+  currentUserId: propUserId,
+  currentUserName: propUserName,
   onCommentClick,
   onShareClick,
   onReactionChange,
@@ -37,13 +38,19 @@ export function PostActions({
 }: PostActionsProps) {
   const { toast } = useToast();
   const { communitySlug } = useSelectedCommunity();
+  const socialContext = useSocialContextSafe();
+  
+  // Usar contexto se disponível, senão usar props (compatibilidade)
+  const currentUserId = propUserId || socialContext?.currentUser?.id || '';
+  const currentUserName = propUserName || socialContext?.currentUser?.name || 'Usuário';
+  
   const postIdNum = parseInt(postId) || 0;
   const savedPostIds = useSavedPostIds();
   const isSaved = savedPostIds.includes(postIdNum);
   const savePostMutation = useSavePost();
   const unsavePostMutation = useUnsavePost();
 
-  const { reactions: updatedReactions, reactionCounts, userReaction, toggleReaction } = useReactions({
+  const { reactions: updatedReactions, userReaction, toggleReaction } = useReactions({
     initialReactions: reactions,
     currentUserId,
     currentUserName,
@@ -53,26 +60,17 @@ export function PostActions({
   useEffect(() => {
     if (!onReactionChange) return;
     
-    // Compare reactions arrays
     const hasChanges = 
       updatedReactions.length !== reactions.length ||
       updatedReactions.some((r, i) => {
         const oldR = reactions[i];
         return !oldR || r.type !== oldR.type || r.userId !== oldR.userId;
-      }) ||
-      reactions.some((r, i) => {
-        const newR = updatedReactions[i];
-        return !newR || r.type !== newR.type || r.userId !== newR.userId;
       });
     
     if (hasChanges) {
       onReactionChange(updatedReactions);
     }
   }, [updatedReactions, reactions, onReactionChange]);
-
-  const handleReaction = (type: ReactionType) => {
-    toggleReaction(type);
-  };
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -129,75 +127,56 @@ export function PostActions({
   };
 
   return (
-    <div className={className}>
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-1">
-          <ReactionButton
-            type="like"
-            count={reactionCounts.like}
-            isActive={userReaction === 'like'}
-            onClick={() => handleReaction('like')}
-          />
-          <ReactionButton
-            type="love"
-            count={reactionCounts.love}
-            isActive={userReaction === 'love'}
-            onClick={() => handleReaction('love')}
-          />
-          <ReactionButton
-            type="laugh"
-            count={reactionCounts.laugh}
-            isActive={userReaction === 'laugh'}
-            onClick={() => handleReaction('laugh')}
-          />
-        </div>
+    <div className={cn('flex items-center gap-2', className)}>
+      {/* Reações unificadas */}
+      <ReactionBar
+        reactions={updatedReactions}
+        userReaction={userReaction}
+        onReact={toggleReaction}
+      />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCommentClick}
-          className="gap-2 h-8 px-2 text-muted-foreground hover:text-primary"
-        >
-          <MessageSquare className="h-4 w-4" />
-          <span className="text-sm font-medium">{commentCount}</span>
-          <span className="text-sm font-medium hidden sm:inline">Comentários</span>
-        </Button>
+      {/* Comentários */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onCommentClick}
+        className="gap-1.5 h-8 px-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+      >
+        <MessageSquare className="h-4 w-4" />
+        <span className="text-sm font-medium tabular-nums">{commentCount}</span>
+      </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSaveToggle}
-          disabled={savePostMutation.isPending || unsavePostMutation.isPending}
-          className={cn(
-            "gap-2 h-8 px-2",
-            isSaved 
-              ? "text-primary hover:text-primary" 
-              : "text-muted-foreground hover:text-primary"
-          )}
-        >
-          {savePostMutation.isPending || unsavePostMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : isSaved ? (
-            <BookmarkCheck className="h-4 w-4 fill-current" />
-          ) : (
-            <Bookmark className="h-4 w-4" />
-          )}
-          <span className="text-sm font-medium hidden sm:inline">
-            {isSaved ? 'Salvo' : 'Salvar'}
-          </span>
-        </Button>
+      {/* Salvar */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleSaveToggle}
+        disabled={savePostMutation.isPending || unsavePostMutation.isPending}
+        className={cn(
+          'gap-1.5 h-8 px-3 rounded-full transition-all duration-200',
+          isSaved 
+            ? 'text-primary bg-primary/10 hover:bg-primary/20' 
+            : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+        )}
+      >
+        {savePostMutation.isPending || unsavePostMutation.isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : isSaved ? (
+          <BookmarkCheck className="h-4 w-4 fill-current" />
+        ) : (
+          <Bookmark className="h-4 w-4" />
+        )}
+      </Button>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleShare}
-          className="gap-2 h-8 px-2 text-muted-foreground hover:text-primary"
-        >
-          <Share2 className="h-4 w-4" />
-          <span className="text-sm font-medium hidden sm:inline">Compartilhar</span>
-        </Button>
-      </div>
+      {/* Compartilhar */}
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={handleShare}
+        className="gap-1.5 h-8 px-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+      >
+        <Share2 className="h-4 w-4" />
+      </Button>
     </div>
   );
 }
-

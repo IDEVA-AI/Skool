@@ -2,7 +2,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ThumbsUp, MessageSquare, Pin, ArrowDown, Send, Loader2 } from "lucide-react";
+import { ThumbsUp, MessageSquare, Pin, ArrowDown, Send, Loader2, Link as LinkIcon, Smile } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useAuth } from "@/hooks/use-auth";
 import { useComments, useCreateComment } from "@/hooks/use-forum";
@@ -173,36 +173,76 @@ export function PostModal({ post, isOpen, onClose }: PostModalProps) {
         {currentUser && (
           <div className="p-4 bg-background border-t border-border z-10">
             <div className="flex gap-3">
-              <Avatar className="h-9 w-9 border border-border/50">
+              <Avatar className="h-9 w-9 border border-border/50 shrink-0">
                 <AvatarImage src={currentUser.avatar} />
                 <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 relative">
-                <Textarea
-                  className="w-full bg-muted/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none min-h-[44px] max-h-32 text-foreground placeholder:text-muted-foreground"
-                  placeholder="Escreva um comentário..."
-                  rows={1}
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleCommentSubmit();
-                    }
-                  }}
-                />
-                <div className="absolute right-2 bottom-1.5">
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-8 w-8 text-muted-foreground hover:text-primary"
+              <div className="flex-1 space-y-2">
+                <div className="relative">
+                  <Textarea
+                    className="w-full bg-muted/50 rounded-xl pl-4 pr-24 py-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none min-h-[52px] max-h-32 text-foreground placeholder:text-muted-foreground border border-border/50 shadow-sm"
+                    placeholder="Escreva um comentário..."
+                    rows={1}
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    onKeyDown={(e) => {
+                      // Ctrl+A / Cmd+A para selecionar tudo
+                      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        e.currentTarget.select();
+                        return;
+                      }
+                      
+                      // Enter para enviar (sem Shift)
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleCommentSubmit();
+                      }
+                    }}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted"
+                      title="Inserir link"
+                    >
+                      <LinkIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="p-2 text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted"
+                      title="Inserir emoji"
+                    >
+                      <Smile className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      className="px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted font-medium"
+                      title="Inserir GIF"
+                    >
+                      GIF
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-end">
+                  <Button
+                    size="sm"
                     onClick={handleCommentSubmit}
                     disabled={createCommentMutation.isPending || !commentContent.trim()}
+                    className="gap-2 rounded-lg"
+                    variant="default"
                   >
                     {createCommentMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
                     ) : (
-                      <Send className="h-4 w-4" />
+                      <>
+                        <Send className="h-4 w-4" />
+                        Comentar
+                      </>
                     )}
                   </Button>
                 </div>

@@ -5,7 +5,7 @@
 -- Este script faz tudo automaticamente:
 -- 1. Promove o primeiro usuário para admin (fallback)
 -- 2. Cria cursos, módulos e aulas
--- 3. Cria anúncio de boas-vindas
+-- 3. Cria aviso de boas-vindas
 --
 -- IMPORTANTE: Você precisa ter criado pelo menos um usuário
 -- via Supabase Auth antes de executar este script
@@ -17,7 +17,7 @@ SELECT * FROM promote_first_user_to_admin();
 -- Criar dados seed
 SELECT create_seed_data();
 
--- Criar anúncio de boas-vindas
+-- Criar aviso de boas-vindas
 INSERT INTO announcements (title, content, created_by, is_active)
 SELECT 
   'Bem-vindo à Plataforma S-K-O-O-L! 🎓',
@@ -35,5 +35,5 @@ SELECT
   (SELECT COUNT(*) FROM courses) as cursos,
   (SELECT COUNT(*) FROM modules) as modulos,
   (SELECT COUNT(*) FROM lessons) as aulas,
-  (SELECT COUNT(*) FROM announcements WHERE is_active = true) as anuncios;
+  (SELECT COUNT(*) FROM announcements WHERE is_active = true) as avisos;
 

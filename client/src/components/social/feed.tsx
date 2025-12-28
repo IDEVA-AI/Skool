@@ -1,15 +1,15 @@
-import { useMemo } from 'react';
+import { useMemo, memo } from 'react';
 import { MessageSquarePlus } from 'lucide-react';
 import { Post as PostType } from '@/types/social';
 import { PostComponent } from './post';
 import { PostComposerSimple } from './post-composer-simple';
+import { useSocialContextSafe } from './social-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useUserRole } from '@/hooks/use-user-role';
 import { can } from '@/lib/permissions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { convertBlocksToContent } from '@/lib/post-utils';
 
 interface FeedProps {
   posts: PostType[];
@@ -27,13 +27,9 @@ interface FeedProps {
 /**
  * Feed - Container principal do feed social
  * 
- * Funcionalidades:
- * - Ordena posts: pinned primeiro, depois por data
- * - Renderiza PostComposer no topo (se autorizado)
- * - Renderiza lista de PostCard
- * - Loading states e empty state
+ * Usa SocialContext quando disponível para dados do usuário.
  */
-export function Feed({
+function Feed({
   posts,
   isLoading = false,
   onPostCreate,
@@ -47,42 +43,44 @@ export function Feed({
 }: FeedProps) {
   const { user } = useAuth();
   const { data: userRole } = useUserRole();
+  const socialContext = useSocialContextSafe();
 
-  // Verificar se usuário pode criar posts
-  const canCreate = can(user, userRole || null, 'create');
+  // Verificar permissões
+  const canCreate = socialContext?.permissions.canCreate ?? can(user, userRole || null, 'create');
 
-  // Ordenar posts: pinned primeiro, depois por data (mais recente primeiro)
+  // Ordenar posts: pinned primeiro, depois por data
   const sortedPosts = useMemo(() => {
     return [...posts].sort((a, b) => {
-      // Posts fixados primeiro
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       
-      // Depois ordenar por data (mais recente primeiro)
       const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
       const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
       return dateB.getTime() - dateA.getTime();
     });
   }, [posts]);
 
-  const currentUser = user ? {
+  // Dados do usuário (do contexto ou fallback)
+  const currentUser = socialContext?.currentUser ?? (user ? {
+    id: user.id,
     name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
     avatar: user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.name || user.email || 'U')}`,
-  } : null;
-
-  const handlePublish = async (title: string, content: string) => {
-    if (onPostCreate) {
-      await onPostCreate(title, content);
-    }
-  };
+  } : null);
 
   if (isLoading) {
     return (
       <div className={cn('space-y-4', className)}>
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="border-border/50 shadow-sm">
+          <Card key={i} className="border-border/50">
             <CardContent className="p-6 space-y-4">
-              <Skeleton className="h-6 w-3/4" />
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              </div>
+              <Skeleton className="h-5 w-3/4" />
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-2/3" />
             </CardContent>
@@ -93,7 +91,7 @@ export function Feed({
   }
 
   return (
-    <div className={cn('space-y-6', className)}>
+    <div className={cn('space-y-4', className)}>
       {/* Post Composer */}
       {canCreate && currentUser && onPostCreate && (
         <PostComposerSimple
@@ -101,50 +99,36 @@ export function Feed({
           name={currentUser.name}
           context={context}
           contextHighlight={contextHighlight}
-          onPublish={handlePublish}
+          onPublish={onPostCreate}
           isPublishing={false}
         />
       )}
 
-      {/* Posts List */}
+      {/* Posts */}
       {sortedPosts.length > 0 ? (
-        <div className="space-y-4">
-          {sortedPosts.map((post) => {
-            // Converter Post do tipo social para formato esperado pelo PostComponent
-            const postForComponent: PostType = {
+        sortedPosts.map((post) => (
+          <PostComponent
+            key={post.id}
+            post={{
               ...post,
-              createdAt: post.createdAt instanceof Date 
-                ? post.createdAt 
-                : new Date(post.createdAt),
-            };
-
-            return (
-              <PostComponent
-                key={post.id}
-                post={postForComponent}
-                currentUserId={user?.id || ''}
-                currentUserName={currentUser?.name || 'Usuário'}
-                currentUserAvatar={currentUser?.avatar}
-                onCommentAdd={onCommentAdd}
-                onReactionChange={onReactionChange}
-                onShare={onShare}
-                onPostClick={onPostClick}
-              />
-            );
-          })}
-        </div>
+              createdAt: post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt),
+            }}
+            onCommentAdd={onCommentAdd}
+            onReactionChange={onReactionChange}
+            onShare={onShare}
+            onPostClick={onPostClick}
+          />
+        ))
       ) : (
-        <Card className="border-border/50 shadow-sm border-dashed">
-          <CardContent className="p-12 text-center space-y-4">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted/50">
-              <MessageSquarePlus className="h-8 w-8 text-muted-foreground" />
+        <Card className="border-border/50 border-dashed">
+          <CardContent className="py-12 text-center space-y-4">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-muted/50">
+              <MessageSquarePlus className="h-7 w-7 text-muted-foreground" />
             </div>
-            <div className="space-y-2">
-              <p className="font-medium text-foreground">
-                Nenhum post ainda
-              </p>
+            <div className="space-y-1">
+              <p className="font-medium text-foreground">Nenhum post ainda</p>
               <p className="text-sm text-muted-foreground">
-                Seja o primeiro a compartilhar algo com a comunidade!
+                Seja o primeiro a compartilhar algo!
               </p>
             </div>
           </CardContent>
@@ -154,3 +138,9 @@ export function Feed({
   );
 }
 
+Feed.displayName = 'Feed';
+
+const FeedMemo = memo(Feed);
+FeedMemo.displayName = 'Feed';
+
+export { FeedMemo as Feed };

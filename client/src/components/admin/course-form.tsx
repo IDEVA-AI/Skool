@@ -6,9 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useCreateCourse, useUpdateCourse } from '@/hooks/use-admin-courses';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Upload, X, Lock } from 'lucide-react';
+import { Loader2, Upload, X, Lock, Users } from 'lucide-react';
 import { useOwnedCommunities } from '@/hooks/use-communities';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useCourseCommunityIds, useUpdateCourseCommunities } from '@/hooks/use-course-communities';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CourseFormProps {
   course?: any;
@@ -21,6 +24,7 @@ export function CourseForm({ course, isOpen, onClose, onSuccess }: CourseFormPro
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [communityId, setCommunityId] = useState('');
+  const [selectedCommunityIds, setSelectedCommunityIds] = useState<string[]>([]);
   const [imageText, setImageText] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
@@ -29,8 +33,10 @@ export function CourseForm({ course, isOpen, onClose, onSuccess }: CourseFormPro
 
   const createMutation = useCreateCourse();
   const updateMutation = useUpdateCourse();
+  const updateCommunitiesMutation = useUpdateCourseCommunities();
   const { toast } = useToast();
   const { data: communities = [] } = useOwnedCommunities();
+  const { data: currentCommunityIds = [] } = useCourseCommunityIds(course?.id || 0);
 
   // Converter arquivo para base64
   const fileToBase64 = (file: File): Promise<{ data: string; mimeType: string }> => {
@@ -46,6 +52,13 @@ export function CourseForm({ course, isOpen, onClose, onSuccess }: CourseFormPro
       reader.onerror = (error) => reject(error);
     });
   };
+
+  // Carregar comunidades atuais quando abrir o formulário de edição
+  useEffect(() => {
+    if (course && currentCommunityIds.length > 0) {
+      setSelectedCommunityIds(currentCommunityIds);
+    }
+  }, [currentCommunityIds, course]);
 
   useEffect(() => {
     if (course) {
@@ -66,6 +79,7 @@ export function CourseForm({ course, isOpen, onClose, onSuccess }: CourseFormPro
       setTitle('');
       setDescription('');
       setCommunityId('');
+      setSelectedCommunityIds([]);
       setImageText('');
       setCoverImageUrl('');
       setCoverImageFile(null);
@@ -168,12 +182,28 @@ export function CourseForm({ course, isOpen, onClose, onSuccess }: CourseFormPro
 
       if (course) {
         await updateMutation.mutateAsync({ id: course.id, ...courseData });
+        
+        // Atualizar comunidades associadas
+        await updateCommunitiesMutation.mutateAsync({
+          courseId: course.id,
+          communityIds: selectedCommunityIds,
+        });
+        
         toast({
           title: 'Curso atualizado!',
           description: 'As alterações foram salvas com sucesso',
         });
       } else {
-        await createMutation.mutateAsync(courseData);
+        const newCourse = await createMutation.mutateAsync(courseData);
+        
+        // Adicionar comunidades ao novo curso
+        if (selectedCommunityIds.length > 0) {
+          await updateCommunitiesMutation.mutateAsync({
+            courseId: newCourse.id,
+            communityIds: selectedCommunityIds,
+          });
+        }
+        
         toast({
           title: 'Curso criado!',
           description: 'O curso foi criado com sucesso',
@@ -191,7 +221,15 @@ export function CourseForm({ course, isOpen, onClose, onSuccess }: CourseFormPro
     }
   };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending;
+  const isLoading = createMutation.isPending || updateMutation.isPending || updateCommunitiesMutation.isPending;
+
+  const toggleCommunity = (communityId: string) => {
+    setSelectedCommunityIds(prev => 
+      prev.includes(communityId)
+        ? prev.filter(id => id !== communityId)
+        : [...prev, communityId]
+    );
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -227,35 +265,69 @@ export function CourseForm({ course, isOpen, onClose, onSuccess }: CourseFormPro
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="community_id">Comunidade</Label>
-              <select
-                id="community_id"
-                value={communityId}
-                onChange={(e) => setCommunityId(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={isLoading}
-              >
-                <option value="">Selecione uma comunidade</option>
-                {communities.map((comm) => (
-                  <option key={comm.id} value={comm.id}>
-                    {comm.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Comunidades onde o curso aparecerá
+            </Label>
+            <p className="text-sm text-muted-foreground mb-2">
+              Selecione as comunidades onde este curso será exibido
+            </p>
+            {communities.length === 0 ? (
+              <p className="text-sm text-muted-foreground italic">
+                Nenhuma comunidade disponível. Crie uma comunidade primeiro.
+              </p>
+            ) : (
+              <ScrollArea className="h-40 rounded-md border p-4">
+                <div className="space-y-3">
+                  {communities.map((comm) => (
+                    <div
+                      key={comm.id}
+                      className="flex items-center space-x-3 hover:bg-muted/50 p-2 rounded-md cursor-pointer"
+                      onClick={() => toggleCommunity(comm.id)}
+                    >
+                      <Checkbox
+                        id={`community-${comm.id}`}
+                        checked={selectedCommunityIds.includes(comm.id)}
+                        onCheckedChange={() => toggleCommunity(comm.id)}
+                        disabled={isLoading}
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        {comm.logo_url && (
+                          <img
+                            src={comm.logo_url}
+                            alt={comm.name}
+                            className="h-6 w-6 rounded-full object-cover"
+                          />
+                        )}
+                        <Label
+                          htmlFor={`community-${comm.id}`}
+                          className="text-sm font-normal cursor-pointer flex-1"
+                        >
+                          {comm.name}
+                        </Label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
+            {selectedCommunityIds.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1">
+                {selectedCommunityIds.length} comunidade{selectedCommunityIds.length !== 1 ? 's' : ''} selecionada{selectedCommunityIds.length !== 1 ? 's' : ''}
+              </p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="image_text">Texto da Capa</Label>
-              <Input
-                id="image_text"
-                value={imageText}
-                onChange={(e) => setImageText(e.target.value)}
-                placeholder="Ex: PROMPT$"
-                disabled={isLoading}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="image_text">Texto da Capa</Label>
+            <Input
+              id="image_text"
+              value={imageText}
+              onChange={(e) => setImageText(e.target.value)}
+              placeholder="Ex: PROMPT$"
+              disabled={isLoading}
+            />
           </div>
 
           <div className="space-y-2">

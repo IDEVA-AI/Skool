@@ -133,7 +133,7 @@ export default function CourseView() {
               onClick={() => setLocation(`/purchase?courseId=${courseId}`)}
             >
               <Lock className="mr-2 h-4 w-4" />
-              Comprar Curso
+              Desbloquear
             </Button>
             <Link href="/courses">
               <Button variant="outline" className="w-full">

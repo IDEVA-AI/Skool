@@ -42,7 +42,7 @@ export function useSearch() {
             type: 'post',
             title: post.title || 'Post sem título',
             description: post.content?.substring(0, 100) || '',
-            url: `/community?post=${post.id}`,
+            url: `/feed?post=${post.id}`,
           });
         });
       }

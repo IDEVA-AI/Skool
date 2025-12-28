@@ -131,7 +131,7 @@ ORDER BY created_at ASC;
 
 Usuários com `role = 'admin'` têm acesso a:
 
-- ✅ Criar, editar e deletar anúncios
+- ✅ Criar, editar e deletar avisos
 - ✅ Criar e gerenciar cursos (como instructor)
 - ✅ Acessar dashboard de instrutor (`/instructor`)
 - ✅ Ver estatísticas de todos os cursos

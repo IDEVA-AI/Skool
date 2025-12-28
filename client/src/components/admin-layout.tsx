@@ -11,7 +11,9 @@ import {
   ChevronRight,
   Menu,
   LogOut,
-  Users as UsersIcon
+  Users as UsersIcon,
+  ShoppingCart,
+  Unlock
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -25,6 +27,8 @@ const adminNavigation = [
   { name: "Cursos", href: "/admin/courses", icon: BookOpen },
   { name: "Módulos e Aulas", href: "/admin/modules", icon: FolderOpen },
   { name: "Media Library", href: "/admin/media", icon: FileVideo },
+  { name: "Integrações", href: "/admin/integrations", icon: ShoppingCart },
+  { name: "Páginas de Desbloqueio", href: "/admin/unlock-pages", icon: Unlock },
   { name: "Configurações", href: "/admin/settings", icon: Settings },
 ];
 

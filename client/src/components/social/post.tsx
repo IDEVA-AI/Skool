@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Post } from '@/types/social';
 import { PostHeader } from './post-header';
@@ -10,11 +10,12 @@ import { PostEditDialog } from './post-edit-dialog';
 import { ReactionType } from '@/types/social';
 import { cn } from '@/lib/utils';
 import { Post as PostPermissionType } from '@/lib/permissions';
+import { useSocialContextSafe } from './social-context';
 
 interface PostProps {
   post: Post;
-  currentUserId: string;
-  currentUserName: string;
+  currentUserId?: string;
+  currentUserName?: string;
   currentUserAvatar?: string;
   onCommentAdd?: (postId: string, content: string, parentId?: string) => void;
   onReactionChange?: (postId: string, reactions: Array<{ id: string; type: ReactionType; userId: string; userName: string }>) => void;
@@ -23,11 +24,18 @@ interface PostProps {
   className?: string;
 }
 
-export function PostComponent({
+/**
+ * PostComponent - Card de post para o feed
+ * 
+ * Otimizações:
+ * - Memoizado para evitar re-renders desnecessários
+ * - Usa SocialContext quando disponível (fallback para props)
+ */
+function PostComponent({
   post,
-  currentUserId,
-  currentUserName,
-  currentUserAvatar,
+  currentUserId: propUserId,
+  currentUserName: propUserName,
+  currentUserAvatar: propUserAvatar,
   onCommentAdd,
   onReactionChange,
   onShare,
@@ -35,32 +43,32 @@ export function PostComponent({
   className,
 }: PostProps) {
   const [editingPost, setEditingPost] = useState<PostPermissionType | null>(null);
+  const socialContext = useSocialContextSafe();
+
+  // Usar contexto se disponível, senão usar props
+  const currentUserId = propUserId || socialContext?.currentUser?.id || '';
+  const currentUserName = propUserName || socialContext?.currentUser?.name || 'Usuário';
 
   const handlePostClick = () => {
-    if (onPostClick) {
-      onPostClick(post);
-    }
+    onPostClick?.(post);
   };
 
   const handleCommentClick = (e?: React.MouseEvent) => {
-    e?.stopPropagation(); // Prevenir propagação dupla
-    // Abrir modal ao clicar em comentários
-    if (onPostClick) {
-      onPostClick(post);
-    }
+    e?.stopPropagation();
+    onPostClick?.(post);
   };
 
   const handleEdit = (postToEdit: PostPermissionType) => {
     setEditingPost(postToEdit);
   };
 
-  // Converter Post do tipo social para o formato esperado pelo PostActionsMenu
+  // Converter para formato de permissões
   const postForMenu: PostPermissionType = {
     id: parseInt(post.id) || 0,
     user_id: post.authorId,
     title: post.title,
     content: post.content,
-    course_id: 0, // Será preenchido se necessário
+    course_id: 0,
     created_at: post.createdAt.toISOString(),
     pinned: post.pinned,
     users: {
@@ -75,7 +83,7 @@ export function PostComponent({
     <>
       <Card 
         className={cn(
-          'border-border/50 shadow-sm hover:shadow-lg hover:border-primary/30 transition-all duration-300 cursor-pointer group',
+          'border-border/50 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 cursor-pointer group',
           className
         )}
         onClick={handlePostClick}
@@ -89,12 +97,12 @@ export function PostComponent({
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-3">
-          <PostContent post={post} />
+        <CardContent className="pt-0">
+          <PostContent post={post} truncate />
         </CardContent>
 
-        <CardFooter className="pt-3 pb-4 flex flex-col gap-4" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-between">
+        <CardFooter className="pt-3 pb-4" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between w-full">
             <PostActions
               postId={post.id}
               reactions={post.reactions}
@@ -119,3 +127,9 @@ export function PostComponent({
   );
 }
 
+PostComponent.displayName = 'PostComponent';
+
+const PostComponentMemo = memo(PostComponent);
+PostComponentMemo.displayName = 'PostComponent';
+
+export { PostComponentMemo as PostComponent };

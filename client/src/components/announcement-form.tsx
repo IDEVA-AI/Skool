@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,19 +22,55 @@ interface AnnouncementFormProps {
   announcement?: any;
   mode?: 'create' | 'edit';
   trigger?: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function AnnouncementForm({ announcement, mode = 'create', trigger }: AnnouncementFormProps) {
-  const [open, setOpen] = useState(false);
+export function AnnouncementForm({ 
+  announcement, 
+  mode = 'create', 
+  trigger,
+  isOpen: controlledOpen,
+  onClose,
+}: AnnouncementFormProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setOpen = (value: boolean) => {
+    if (controlledOpen === undefined) {
+      setInternalOpen(value);
+    } else if (onClose && !value) {
+      onClose();
+    }
+  };
   const [title, setTitle] = useState(announcement?.title || '');
   const [content, setContent] = useState(announcement?.content || '');
   const [imageUrl, setImageUrl] = useState(announcement?.image_url || '');
+  const [buttonText, setButtonText] = useState(announcement?.button_text || 'Saiba mais');
+  const [buttonUrl, setButtonUrl] = useState(announcement?.button_url || '');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   const createMutation = useCreateAnnouncement();
   const updateMutation = useUpdateAnnouncement();
   const deleteMutation = useDeleteAnnouncement();
   const { toast } = useToast();
+
+  // Atualizar campos quando o aviso mudar ou o dialog abrir
+  useEffect(() => {
+    if (open && announcement) {
+      setTitle(announcement.title || '');
+      setContent(announcement.content || '');
+      setImageUrl(announcement.image_url || '');
+      setButtonText(announcement.button_text || 'Saiba mais');
+      setButtonUrl(announcement.button_url || '');
+    } else if (open && mode === 'create') {
+      // Resetar campos ao criar novo
+      setTitle('');
+      setContent('');
+      setImageUrl('');
+      setButtonText('Saiba mais');
+      setButtonUrl('');
+    }
+  }, [open, announcement, mode]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,20 +86,28 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
 
     try {
       if (mode === 'create') {
-        await createMutation.mutateAsync({ title, content, imageUrl: imageUrl || undefined });
+        await createMutation.mutateAsync({ 
+          title, 
+          content, 
+          imageUrl: imageUrl || undefined,
+          buttonText: buttonText || undefined,
+          buttonUrl: buttonUrl || undefined,
+        });
         toast({
-          title: 'Anúncio criado!',
-          description: 'O anúncio foi publicado com sucesso',
+          title: 'Aviso criado!',
+          description: 'O aviso foi publicado com sucesso',
         });
       } else {
         await updateMutation.mutateAsync({ 
           id: announcement.id, 
           title, 
           content, 
-          imageUrl: imageUrl || null 
+          imageUrl: imageUrl || null,
+          buttonText: buttonText || null,
+          buttonUrl: buttonUrl || null,
         });
         toast({
-          title: 'Anúncio atualizado!',
+          title: 'Aviso atualizado!',
           description: 'As alterações foram salvas',
         });
       }
@@ -71,11 +115,13 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
       setTitle('');
       setContent('');
       setImageUrl('');
+      setButtonText('Saiba mais');
+      setButtonUrl('');
       setOpen(false);
     } catch (error: any) {
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível salvar o anúncio',
+        description: error.message || 'Não foi possível salvar o aviso',
         variant: 'destructive',
       });
     }
@@ -85,15 +131,15 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
     try {
       await deleteMutation.mutateAsync(announcement.id);
       toast({
-        title: 'Anúncio deletado',
-        description: 'O anúncio foi removido com sucesso',
+        title: 'Aviso deletado',
+        description: 'O aviso foi removido com sucesso',
       });
       setDeleteDialogOpen(false);
       setOpen(false);
     } catch (error: any) {
       toast({
         title: 'Erro',
-        description: error.message || 'Não foi possível deletar o anúncio',
+        description: error.message || 'Não foi possível deletar o aviso',
         variant: 'destructive',
       });
     }
@@ -102,30 +148,18 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
   return (
     <>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          {trigger || (
-            <Button variant="outline" size="sm">
-              {mode === 'create' ? (
-                <>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Criar Anúncio
-                </>
-              ) : (
-                <>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar
-                </>
-              )}
-            </Button>
-          )}
-        </DialogTrigger>
+        {trigger && (
+          <DialogTrigger asChild>
+            {trigger}
+          </DialogTrigger>
+        )}
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{mode === 'create' ? 'Criar Anúncio' : 'Editar Anúncio'}</DialogTitle>
+            <DialogTitle>{mode === 'create' ? 'Criar Aviso' : 'Editar Aviso'}</DialogTitle>
             <DialogDescription>
               {mode === 'create' 
-                ? 'Crie um novo anúncio para a comunidade'
-                : 'Edite as informações do anúncio'}
+                ? 'Crie um novo aviso para a comunidade'
+                : 'Edite as informações do aviso'}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -135,7 +169,7 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Título do anúncio"
+                placeholder="Título do aviso"
                 required
                 disabled={createMutation.isPending || updateMutation.isPending}
               />
@@ -146,7 +180,7 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
                 id="content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                placeholder="Conteúdo do anúncio"
+                placeholder="Conteúdo do aviso"
                 rows={5}
                 required
                 disabled={createMutation.isPending || updateMutation.isPending}
@@ -162,6 +196,30 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
                 placeholder="https://exemplo.com/imagem.jpg"
                 disabled={createMutation.isPending || updateMutation.isPending}
               />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="buttonText">Texto do Botão (opcional)</Label>
+              <Input
+                id="buttonText"
+                value={buttonText}
+                onChange={(e) => setButtonText(e.target.value)}
+                placeholder="Saiba mais"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="buttonUrl">URL do Botão (opcional)</Label>
+              <Input
+                id="buttonUrl"
+                type="url"
+                value={buttonUrl}
+                onChange={(e) => setButtonUrl(e.target.value)}
+                placeholder="https://exemplo.com ou /caminho"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Pode ser um link externo (https://) ou interno (/caminho)
+              </p>
             </div>
             <div className="flex items-center justify-between pt-4">
               {mode === 'edit' && (
@@ -217,7 +275,7 @@ export function AnnouncementForm({ announcement, mode = 'create', trigger }: Ann
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja deletar este anúncio? Esta ação não pode ser desfeita.
+              Tem certeza que deseja deletar este aviso? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

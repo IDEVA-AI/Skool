@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { CommunityProvider } from "@/contexts/community-context";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { initializeErrorReporting } from "@/lib/error-reporter";
 import NotFound from "@/pages/not-found";
@@ -11,7 +12,6 @@ import Layout from "@/components/layout";
 import Dashboard from "@/pages/home";
 import Courses from "@/pages/courses";
 import CourseView from "@/pages/course-view";
-import Community from "@/pages/community-v2";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -23,6 +23,8 @@ import AdminCourseDetail from "@/pages/admin/course-detail";
 import AdminMedia from "@/pages/admin/media";
 import AdminModules from "@/pages/admin/modules";
 import AdminSettings from "@/pages/admin/settings";
+import AdminIntegrations from "@/pages/admin/integrations";
+import AdminUnlockPages from "@/pages/admin/unlock-pages";
 import InvitePage from "@/pages/invite";
 import CourseInvitePage from "@/pages/course-invite";
 import PurchasePage from "@/pages/purchase";
@@ -106,6 +108,24 @@ function Router() {
           </AdminGuard>
         </AuthGuard>
       </Route>
+      <Route path="/admin/integrations">
+        <AuthGuard>
+          <AdminGuard>
+            <AdminLayout>
+              <AdminIntegrations />
+            </AdminLayout>
+          </AdminGuard>
+        </AuthGuard>
+      </Route>
+      <Route path="/admin/unlock-pages">
+        <AuthGuard>
+          <AdminGuard>
+            <AdminLayout>
+              <AdminUnlockPages />
+            </AdminLayout>
+          </AdminGuard>
+        </AuthGuard>
+      </Route>
       <Route path="/admin">
         <AuthGuard>
           <AdminGuard>
@@ -138,13 +158,6 @@ function Router() {
         <AuthGuard>
           <Layout>
             <Courses />
-          </Layout>
-        </AuthGuard>
-      </Route>
-      <Route path="/c/:slug/community">
-        <AuthGuard>
-          <Layout>
-            <Community />
           </Layout>
         </AuthGuard>
       </Route>
@@ -200,7 +213,6 @@ function Router() {
               <Route path="/" component={Dashboard} />
               <Route path="/courses/:id" component={CourseView} />
               <Route path="/courses" component={Courses} />
-              <Route path="/community" component={Community} />
               <Route path="/profile" component={ProfilePage} />
               <Route path="/saved" component={SavedPostsPage} />
               <Route path="/notifications" component={NotificationsPage} />
@@ -224,10 +236,12 @@ function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <CommunityProvider>
-          <Toaster />
-          <Router />
-        </CommunityProvider>
+        <ThemeProvider defaultTheme="system" storageKey="aurius-theme">
+          <CommunityProvider>
+            <Toaster />
+            <Router />
+          </CommunityProvider>
+        </ThemeProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );

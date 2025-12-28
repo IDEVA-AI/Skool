@@ -61,7 +61,7 @@ SELECT * FROM list_admins();
    -- Criar dados seed (cursos, módulos, aulas)
    SELECT create_seed_data();
 
-   -- Criar anúncio de boas-vindas
+   -- Criar aviso de boas-vindas
    INSERT INTO announcements (title, content, created_by, is_active)
    SELECT 
      'Bem-vindo à Plataforma S-K-O-O-L! 🎓',
@@ -77,7 +77,7 @@ SELECT * FROM list_admins();
 3. **Executar** (botão Run ou Ctrl+Enter)
 
 4. **Verificar Resultado**
-   - Deve mostrar: `cursos: 4, modulos: 6, aulas: 12, anuncios: 1`
+   - Deve mostrar: `cursos: 4, modulos: 6, aulas: 12, avisos: 1`
 
 ### Passo 4: Testar a Aplicação (5 minutos)
 
@@ -99,7 +99,7 @@ SELECT * FROM list_admins();
    - ✅ Marcar aula como concluída
    - ✅ Criar post no feed (`/`)
    - ✅ Comentar em posts
-   - ✅ Criar anúncio (se for admin)
+   - ✅ Criar aviso (se for admin)
    - ✅ Ver dashboard em `/instructor` (se for instructor/admin)
 
 ## ✅ Checklist de Verificação
@@ -131,7 +131,7 @@ GROUP BY c.id, c.title;
 - ✅ Verifique se há um usuário com `role = 'admin'` ou `role = 'instructor'`
 - ✅ Verifique o console do navegador para erros
 
-### "Não consigo criar anúncios"
+### "Não consigo criar avisos"
 - ✅ Verifique se seu usuário tem `role = 'admin'` na tabela `users`
 - ✅ Execute: `SELECT email, role FROM users WHERE email = 'seu-email@exemplo.com';`
 - ✅ Se não for admin, promova usando: `SELECT * FROM promote_to_admin('seu-email@exemplo.com');`
@@ -167,7 +167,7 @@ Após o setup básico:
 5. **Personalize**:
    - Crie mais usuários (alunos) via registro
    - Use o fórum para interagir com a comunidade
-   - Crie anúncios para comunicar com os alunos
+   - Crie avisos para comunicar com os alunos
 
 ## 📝 Notas
 

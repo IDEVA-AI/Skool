@@ -10,6 +10,7 @@ interface CommentListProps {
   depth?: number;
   maxDepth?: number;
   onReply: (content: string, parentId: string) => void;
+  onReplyClick?: (commentId: string, authorName: string) => void;
   onReactionChange?: (commentId: string, reactions: Array<{ id: string; type: ReactionType; userId: string; userName: string }>) => void;
 }
 
@@ -21,13 +22,14 @@ interface CommentListProps {
  * - Only re-renders when comments array reference changes
  * - Supports infinite nesting depth via recursion
  */
-export const CommentList = memo(function CommentList({
+function CommentList({
   comments,
   currentUserId,
   currentUserName,
   depth = 0,
   maxDepth = 10,
   onReply,
+  onReplyClick,
   onReactionChange,
 }: CommentListProps) {
   if (!comments || comments.length === 0) {
@@ -45,10 +47,18 @@ export const CommentList = memo(function CommentList({
           depth={depth}
           maxDepth={maxDepth}
           onReply={onReply}
+          onReplyClick={onReplyClick}
           onReactionChange={onReactionChange}
         />
       ))}
     </div>
   );
-});
+}
+
+CommentList.displayName = 'CommentList';
+
+const CommentListMemo = memo(CommentList);
+CommentListMemo.displayName = 'CommentList';
+
+export { CommentListMemo as CommentList };
 

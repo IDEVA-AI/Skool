@@ -189,14 +189,14 @@ CREATE TRIGGER trigger_notify_new_lesson
   FOR EACH ROW
   EXECUTE FUNCTION notify_new_lesson();
 
--- Trigger para notificar quando novo anúncio é criado
+-- Trigger para notificar quando novo aviso é criado
 CREATE OR REPLACE FUNCTION notify_new_announcement()
 RETURNS TRIGGER AS $$
 DECLARE
   v_community_id UUID;
   v_member RECORD;
 BEGIN
-  -- Se o anúncio tem community_id, notificar membros da comunidade
+  -- Se o aviso tem community_id, notificar membros da comunidade
   IF NEW.community_id IS NOT NULL THEN
     FOR v_member IN
       SELECT user_id FROM community_members WHERE community_id = NEW.community_id
@@ -206,7 +206,7 @@ BEGIN
         'announcement',
         NEW.id::TEXT,
         'community',
-        'Novo anúncio',
+        'Novo aviso',
         NEW.title
       );
     END LOOP;
