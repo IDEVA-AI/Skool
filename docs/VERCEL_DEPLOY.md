@@ -1,5 +1,59 @@
 # Guia de Deploy na Vercel
 
+## Deploy Automático com GitHub Actions
+
+O projeto está configurado com CI/CD automático que faz deploy na Vercel sempre que houver um commit na branch `main` ou `master`.
+
+### Configuração Inicial
+
+#### Opção 1: Integração Nativa Vercel + GitHub (Recomendado - Mais Simples)
+
+1. Acesse o [Dashboard da Vercel](https://vercel.com/dashboard)
+2. Vá em **Settings** > **Git** do seu projeto
+3. Conecte seu repositório GitHub
+4. Configure:
+   - **Production Branch**: `main` ou `master`
+   - **Build Command**: `npm run build:client`
+   - **Output Directory**: `dist/public`
+   - **Install Command**: `npm ci`
+5. Adicione as variáveis de ambiente:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+
+A Vercel fará deploy automático a cada push na branch de produção.
+
+#### Opção 2: GitHub Actions com Vercel CLI
+
+Se preferir usar GitHub Actions diretamente:
+
+1. Obtenha suas credenciais da Vercel:
+   ```bash
+   # Instale a Vercel CLI localmente
+   npm i -g vercel
+   
+   # Faça login
+   vercel login
+   
+   # Link seu projeto
+   vercel link
+   ```
+
+2. Configure os secrets no GitHub:
+   - Vá em **Settings** > **Secrets and variables** > **Actions** do seu repositório
+   - Adicione os seguintes secrets:
+     - `VERCEL_TOKEN`: Obtenha em [Vercel Tokens](https://vercel.com/account/tokens)
+     - `VERCEL_ORG_ID`: Encontre no arquivo `.vercel/project.json` após `vercel link`
+     - `VERCEL_PROJECT_ID`: Encontre no arquivo `.vercel/project.json` após `vercel link`
+     - `VITE_SUPABASE_URL`: URL do seu projeto Supabase
+     - `VITE_SUPABASE_ANON_KEY`: Chave anon do Supabase
+
+3. O workflow `.github/workflows/deploy.yml` fará deploy automático a cada commit.
+
+### Workflows Disponíveis
+
+- **`.github/workflows/deploy.yml`**: Deploy completo na Vercel (requer secrets configurados)
+- **`.github/workflows/ci.yml`**: CI básico com build e testes (não requer secrets)
+
 ## Problema: Subdomínios não funcionam
 
 Quando você tenta acessar URLs como `ponto-zero.vercel.app` ou `teste.vercel.app`, a Vercel retorna erro 404 porque está tentando criar subdomínios separados ao invés de rotear para a aplicação principal.
@@ -60,4 +114,10 @@ Após fazer o deploy:
 2. Verifique se todas as rotas funcionam (`/`, `/courses`, `/community`, etc.)
 3. Teste navegação entre páginas
 4. Verifique se o login funciona corretamente
+
+## Status do Deploy
+
+O projeto está em produção em: **https://skool-sable.vercel.app/**
+
+Cada commit na branch `main` ou `master` acionará automaticamente um novo deploy.
 

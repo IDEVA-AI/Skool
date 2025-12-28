@@ -55,11 +55,26 @@ export function useDeletePost() {
   return useMutation({
     mutationFn: async ({ postId }: { postId: number }) => {
       await postsService.deletePost(postId);
-      return { success: true };
+      return { success: true, postId };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['all-posts'] });
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
+    onSuccess: async (_, variables) => {
+      const { postId } = variables;
+      
+      // Remover o post do cache imediatamente para atualização visual instantânea
+      queryClient.setQueryData(['all-posts'], (oldData: any) => {
+        if (!oldData) return oldData;
+        return oldData.filter((post: any) => post.id !== postId);
+      });
+      
+      // Invalidar todas as queries relacionadas a posts
+      await queryClient.invalidateQueries({ queryKey: ['all-posts'] });
+      await queryClient.invalidateQueries({ queryKey: ['posts'] });
+      
+      // Forçar refetch imediato para garantir sincronização com o servidor
+      await queryClient.refetchQueries({ 
+        queryKey: ['all-posts'],
+        type: 'active'
+      });
     },
   });
 }
