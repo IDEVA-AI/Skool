@@ -14,7 +14,7 @@ declare module "http" {
 }
 
 // Constants
-const DEFAULT_PORT = 3000;
+const DEFAULT_PORT = 5000;
 const DEFAULT_HOST = "0.0.0.0";
 const API_PREFIX = "/api";
 
