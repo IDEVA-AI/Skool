@@ -6,15 +6,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { TipTapEditor } from '@/components/tiptap-editor';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import { 
-  ThumbsUp, 
-  MessageSquare, 
-  Pin, 
-  Paperclip, 
-  Link as LinkIcon, 
-  Youtube, 
-  BarChart2, 
-  Smile, 
+import {
+  ThumbsUp,
+  MessageSquare,
+  Pin,
+  Paperclip,
+  Link as LinkIcon,
+  Youtube,
+  BarChart2,
+  Smile,
   Loader2,
   Plus
 } from 'lucide-react';
@@ -78,10 +78,10 @@ export default function Feed() {
 
   // Primeiro curso da comunidade para usar como padrão ao criar post
   const defaultCourse = useMemo(() => {
-    return enrolledCommunityCourses.length > 0 
-      ? enrolledCommunityCourses[0] 
-      : communityCourses.length > 0 
-        ? communityCourses[0] 
+    return enrolledCommunityCourses.length > 0
+      ? enrolledCommunityCourses[0]
+      : communityCourses.length > 0
+        ? communityCourses[0]
         : null;
   }, [enrolledCommunityCourses, communityCourses]);
 
@@ -160,7 +160,7 @@ export default function Feed() {
       {isAdmin && announcements && announcements.length > 0 && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Avisos</h2>
+            <h2 className="text-xl font-heading font-black tracking-tight drop-shadow-sm">Avisos</h2>
             <Button
               variant="outline"
               size="sm"
@@ -191,9 +191,9 @@ export default function Feed() {
             const postDate = new Date(post.created_at);
 
             return (
-              <Card 
-                key={post.id} 
-                className="border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+              <Card
+                key={post.id}
+                className="glass-card shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-white/20 transition-all duration-300 cursor-pointer"
                 onClick={() => setSelectedPost(post)}
               >
                 <CardHeader className="pb-3">
@@ -207,7 +207,7 @@ export default function Feed() {
                       </Avatar>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm">{postUser.name || postUser.email?.split('@')[0] || 'Usuário'}</span>
+                          <span className="font-heading font-bold tracking-tight text-sm">{postUser.name || postUser.email?.split('@')[0] || 'Usuário'}</span>
                           {post.pinned && (
                             <Pin className="h-3.5 w-3.5 text-primary fill-current" />
                           )}
@@ -228,7 +228,7 @@ export default function Feed() {
 
                 <CardContent className="space-y-3">
                   {post.title && (
-                    <h3 className="text-lg font-bold leading-tight">{post.title}</h3>
+                    <h3 className="text-xl font-heading font-bold tracking-tight leading-tight">{post.title}</h3>
                   )}
                   {hasTextContent(post.content) && (
                     <div
@@ -238,7 +238,7 @@ export default function Feed() {
                   )}
                 </CardContent>
 
-                <CardFooter className="pt-3 pb-4 flex items-center justify-between">
+                <CardFooter className="pt-3 pb-4 flex items-center justify-between bg-transparent border-t border-white/5">
                   <div className="flex items-center gap-4">
                     <Button variant="ghost" size="sm" className="gap-2 h-8">
                       <ThumbsUp className="h-4 w-4" />

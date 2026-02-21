@@ -143,6 +143,10 @@ New DB changes: add numbered SQL migration in `supabase/migrations/`.
 | `DATABASE_URL` | PostgreSQL connection (drizzle-kit) |
 | `HOTMART_HOTTOK` | Hotmart webhook validation |
 
+## MCP Servers
+
+O projeto usa o **Supabase MCP** (configurado em `~/.claude/settings.json`). Para operações de banco de dados (executar SQL, queries, migrations, seed data), usar SEMPRE as ferramentas MCP do Supabase (prefixo `mcp__supabase__`) em vez de sugerir ações manuais no Dashboard.
+
 ## Language
 
 The application UI and content are in Brazilian Portuguese (pt-BR). Code (variables, functions, comments) is in English.

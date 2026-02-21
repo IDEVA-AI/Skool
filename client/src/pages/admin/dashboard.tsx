@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminDashboard() {
   const { data: courses, isLoading: coursesLoading } = useCourses();
-  
+
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
@@ -50,13 +50,13 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-heading font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Visão geral da plataforma</p>
+        <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm">Dashboard</h1>
+        <p className="text-muted-foreground mt-2 font-medium">Visão geral da plataforma</p>
       </header>
 
       {/* Stats Cards */}
       <div className="grid md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="glass-card border-white/5 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Cursos</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-white/5 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Inscrições</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -78,7 +78,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="glass-card border-white/5 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Aulas</CardTitle>
             <FileVideo className="h-4 w-4 text-muted-foreground" />
@@ -92,10 +92,10 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-xl font-semibold mb-4">Ações Rápidas</h2>
+        <h2 className="text-2xl font-heading font-black tracking-tight mb-4">Ações Rápidas</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card className="hover:border-primary/50 transition-colors cursor-pointer" asChild>
-            <Link href="/admin/courses">
+          <Link href="/admin/courses">
+            <Card className="glass-card hover:shadow-lg hover:-translate-y-1 hover:border-white/20 transition-all duration-300 cursor-pointer">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
@@ -107,11 +107,11 @@ export default function AdminDashboard() {
                   Criar, editar ou deletar cursos
                 </p>
               </CardContent>
-            </Link>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="hover:border-primary/50 transition-colors cursor-pointer" asChild>
-            <Link href="/admin/modules">
+          <Link href="/admin/modules">
+            <Card className="glass-card hover:shadow-lg hover:-translate-y-1 hover:border-white/20 transition-all duration-300 cursor-pointer">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <FileVideo className="h-5 w-5" />
@@ -123,11 +123,11 @@ export default function AdminDashboard() {
                   Organizar conteúdo dos cursos
                 </p>
               </CardContent>
-            </Link>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="hover:border-primary/50 transition-colors cursor-pointer" asChild>
-            <Link href="/admin/media">
+          <Link href="/admin/media">
+            <Card className="glass-card hover:shadow-lg hover:-translate-y-1 hover:border-white/20 transition-all duration-300 cursor-pointer">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
@@ -139,8 +139,8 @@ export default function AdminDashboard() {
                   Gerenciar arquivos de mídia
                 </p>
               </CardContent>
-            </Link>
-          </Card>
+            </Card>
+          </Link>
         </div>
       </div>
 
@@ -158,11 +158,11 @@ export default function AdminDashboard() {
         </div>
       ) : courses && courses.length > 0 ? (
         <div>
-          <h2 className="text-xl font-semibold mb-4">Cursos Recentes</h2>
+          <h2 className="text-2xl font-heading font-black tracking-tight mb-4">Cursos Recentes</h2>
           <div className="space-y-2">
             {courses.slice(0, 5).map((course) => (
-              <Card key={course.id} className="hover:border-primary/50 transition-colors cursor-pointer" asChild>
-                <Link href={`/admin/courses/${course.id}`}>
+              <Link key={course.id} href={`/admin/courses/${course.id}`}>
+                <Card className="glass-card hover:shadow-md hover:-translate-y-0.5 hover:border-white/20 transition-all duration-300 cursor-pointer mt-2">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -174,8 +174,8 @@ export default function AdminDashboard() {
                       <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     </div>
                   </CardContent>
-                </Link>
-              </Card>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

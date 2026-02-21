@@ -1,10 +1,14 @@
+import dotenv from "dotenv";
+import path from "path";
+
+// Initialize dotenv at the very top
+dotenv.config({ path: path.join(process.cwd(), ".env.local") });
+
 import express, { type Request, Response, NextFunction, type Express } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer, type Server } from "http";
 import fs from "fs";
-import path from "path";
-import dotenv from "dotenv";
 
 // Extend Express Request type to include rawBody
 declare module "http" {
@@ -14,7 +18,7 @@ declare module "http" {
 }
 
 // Constants
-const DEFAULT_PORT = 5000;
+const DEFAULT_PORT = 3001;
 const DEFAULT_HOST = "0.0.0.0";
 const API_PREFIX = "/api";
 
@@ -131,9 +135,6 @@ function startServer(httpServer: Server, port: number): void {
 async function initializeServer(): Promise<void> {
   const app = express();
   const httpServer = createServer(app);
-
-  // Carregar variáveis de ambiente
-  dotenv.config({ path: path.join(process.cwd(), ".env.local") });
 
   // Setup middleware
   setupMiddleware(app);

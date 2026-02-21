@@ -173,12 +173,12 @@ export default function Profile() {
     return (
       <div className="space-y-8">
         <header>
-          <h1 className="text-3xl font-heading font-bold text-foreground">Meu Perfil</h1>
-          <p className="text-muted-foreground mt-2">
+          <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm">Meu Perfil</h1>
+          <p className="text-muted-foreground mt-2 font-medium">
             Gerencie suas informações pessoais
           </p>
         </header>
-        <Card>
+        <Card className="glass-card border-white/5 shadow-sm">
           <CardContent className="p-6 space-y-4">
             <Skeleton className="h-32 w-32 rounded-full" />
             <Skeleton className="h-10 w-full" />
@@ -192,13 +192,13 @@ export default function Profile() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-heading font-bold text-foreground">Meu Perfil</h1>
-        <p className="text-muted-foreground mt-2">
+        <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm">Meu Perfil</h1>
+        <p className="text-muted-foreground mt-2 font-medium">
           Gerencie suas informações pessoais
         </p>
       </header>
 
-      <Card>
+      <Card className="glass-card border-white/5 shadow-sm">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
