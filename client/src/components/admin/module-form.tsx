@@ -17,7 +17,6 @@ interface ModuleFormProps {
 
 export function ModuleForm({ courseId, module, isOpen, onClose, onSuccess }: ModuleFormProps) {
   const [title, setTitle] = useState('');
-  const [order, setOrder] = useState<number>(0);
 
   const createMutation = useCreateModule();
   const updateMutation = useUpdateModule();
@@ -26,10 +25,8 @@ export function ModuleForm({ courseId, module, isOpen, onClose, onSuccess }: Mod
   useEffect(() => {
     if (module) {
       setTitle(module.title || '');
-      setOrder(module.order || 0);
     } else {
       setTitle('');
-      setOrder(0);
     }
   }, [module, isOpen]);
 
@@ -50,7 +47,6 @@ export function ModuleForm({ courseId, module, isOpen, onClose, onSuccess }: Mod
         await updateMutation.mutateAsync({
           id: module.id,
           title: title.trim(),
-          order: order,
         });
         toast({
           title: 'Módulo atualizado!',
@@ -60,7 +56,6 @@ export function ModuleForm({ courseId, module, isOpen, onClose, onSuccess }: Mod
         await createMutation.mutateAsync({
           course_id: courseId,
           title: title.trim(),
-          order: order || undefined,
         });
         toast({
           title: 'Módulo criado!',
@@ -101,22 +96,6 @@ export function ModuleForm({ courseId, module, isOpen, onClose, onSuccess }: Mod
               required
               disabled={isLoading}
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="order">Ordem</Label>
-            <Input
-              id="order"
-              type="number"
-              value={order}
-              onChange={(e) => setOrder(parseInt(e.target.value) || 0)}
-              placeholder="0"
-              min="0"
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              A ordem determina a sequência de exibição dos módulos
-            </p>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">

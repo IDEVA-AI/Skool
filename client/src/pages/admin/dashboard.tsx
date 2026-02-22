@@ -5,13 +5,41 @@ import { useCourses } from '@/hooks/use-courses';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAdminCommunity } from '@/contexts/admin-community-context';
 
 export default function AdminDashboard() {
+  const { selectedCommunityId } = useAdminCommunity();
   const { data: courses, isLoading: coursesLoading } = useCourses();
 
   const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['admin-stats'],
+    queryKey: ['admin-stats', selectedCommunityId],
     queryFn: async () => {
+      if (selectedCommunityId) {
+        // Buscar IDs dos cursos desta comunidade via course_communities
+        const { data: courseLinks } = await supabase
+          .from('course_communities')
+          .select('course_id')
+          .eq('community_id', selectedCommunityId);
+
+        const courseIds = courseLinks?.map((cl) => cl.course_id) || [];
+
+        if (courseIds.length === 0) {
+          return { totalCourses: 0, totalEnrollments: 0, totalLessons: 0 };
+        }
+
+        const [enrollmentsResult, lessonsResult] = await Promise.all([
+          supabase.from('enrollments').select('id', { count: 'exact', head: true }).in('course_id', courseIds),
+          supabase.from('lessons').select('id, modules!inner(course_id)', { count: 'exact', head: true }).in('modules.course_id', courseIds),
+        ]);
+
+        return {
+          totalCourses: courseIds.length,
+          totalEnrollments: enrollmentsResult.count || 0,
+          totalLessons: lessonsResult.count || 0,
+        };
+      }
+
+      // Visão global
       const [coursesResult, enrollmentsResult, lessonsResult] = await Promise.all([
         supabase.from('courses').select('id', { count: 'exact', head: true }),
         supabase.from('enrollments').select('id', { count: 'exact', head: true }),
@@ -105,22 +133,6 @@ export default function AdminDashboard() {
               <CardContent>
                 <p className="text-sm text-muted-foreground">
                   Criar, editar ou deletar cursos
-                </p>
-              </CardContent>
-            </Card>
-          </Link>
-
-          <Link href="/admin/modules">
-            <Card className="glass-card hover:shadow-lg hover:-translate-y-1 hover:border-white/20 transition-all duration-300 cursor-pointer">
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <FileVideo className="h-5 w-5" />
-                  Módulos e Aulas
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Organizar conteúdo dos cursos
                 </p>
               </CardContent>
             </Card>

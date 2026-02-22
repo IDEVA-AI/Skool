@@ -70,30 +70,28 @@ export function DraggableModuleItem({
               </span>
             )}
           </div>
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onEdit}>
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </AccordionTrigger>
       <AccordionContent>
         <div className="space-y-4 pt-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-start">
             <Button variant="outline" size="sm" onClick={onCreateLesson}>
               <Plus className="h-4 w-4 mr-2" />
               Nova Aula
             </Button>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="sm" onClick={onEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onDelete}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Deletar
-              </Button>
-            </div>
           </div>
           {children}
         </div>

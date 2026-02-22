@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   BookOpen, 
-  FileVideo, 
-  FolderOpen, 
+  FileVideo,
   Settings, 
   Home,
   ChevronRight,
@@ -16,23 +15,65 @@ import {
   Unlock
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AdminCommunityProvider, useAdminCommunity } from "@/contexts/admin-community-context";
+import { useOwnedCommunities } from "@/hooks/use-communities";
 
 const adminNavigation = [
   { name: "Dashboard", href: "/admin", icon: Home },
   { name: "Comunidades", href: "/admin/communities", icon: UsersIcon },
   { name: "Cursos", href: "/admin/courses", icon: BookOpen },
-  { name: "Módulos e Aulas", href: "/admin/modules", icon: FolderOpen },
   { name: "Media Library", href: "/admin/media", icon: FileVideo },
   { name: "Integrações", href: "/admin/integrations", icon: ShoppingCart },
   { name: "Páginas de Desbloqueio", href: "/admin/unlock-pages", icon: Unlock },
   { name: "Configurações", href: "/admin/settings", icon: Settings },
 ];
 
+function CommunityPicker() {
+  const { data: communities } = useOwnedCommunities();
+  const { selectedCommunityId, setSelectedCommunityId } = useAdminCommunity();
+
+  if (!communities || communities.length <= 1) return null;
+
+  return (
+    <div className="px-4 pb-2">
+      <Select
+        value={selectedCommunityId || "all"}
+        onValueChange={(value) => setSelectedCommunityId(value === "all" ? null : value)}
+      >
+        <SelectTrigger className="w-full h-9 text-xs">
+          <SelectValue placeholder="Todas as comunidades" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Todas as comunidades</SelectItem>
+          {communities.map((c) => (
+            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AdminCommunityProvider>
+      <AdminLayoutInner>{children}</AdminLayoutInner>
+    </AdminCommunityProvider>
+  );
+}
+
+function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
@@ -69,8 +110,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </Link>
           </div>
 
+          {/* Community Picker */}
+          <div className="pt-4">
+            <CommunityPicker />
+          </div>
+
           {/* Navigation */}
-          <ScrollArea className="flex-1 py-6">
+          <ScrollArea className="flex-1 py-4">
             <nav className="flex flex-col gap-1 px-4">
               {adminNavigation.map((item) => {
                 const Icon = item.icon;
@@ -137,7 +183,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="h-16 border-b border-border/40 flex items-center px-6">
               <span className="font-heading font-bold text-lg">Admin Panel</span>
             </div>
-            <ScrollArea className="flex-1 py-6">
+            <div className="pt-4">
+              <CommunityPicker />
+            </div>
+            <ScrollArea className="flex-1 py-4">
               <nav className="flex flex-col gap-1 px-4">
                 {adminNavigation.map((item) => {
                   const Icon = item.icon;

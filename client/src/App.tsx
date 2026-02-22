@@ -21,7 +21,6 @@ import AdminCommunityDetail from "@/pages/admin/community-detail";
 import AdminCourses from "@/pages/admin/courses";
 import AdminCourseDetail from "@/pages/admin/course-detail";
 import AdminMedia from "@/pages/admin/media";
-import AdminModules from "@/pages/admin/modules";
 import AdminSettings from "@/pages/admin/settings";
 import AdminIntegrations from "@/pages/admin/integrations";
 import AdminUnlockPages from "@/pages/admin/unlock-pages";
@@ -90,16 +89,7 @@ function Router() {
           </AdminGuard>
         </AuthGuard>
       </Route>
-      <Route path="/admin/modules">
-        <AuthGuard>
-          <AdminGuard>
-            <AdminLayout>
-              <AdminModules />
-            </AdminLayout>
-          </AdminGuard>
-        </AuthGuard>
-      </Route>
-      <Route path="/admin/settings">
+<Route path="/admin/settings">
         <AuthGuard>
           <AdminGuard>
             <AdminLayout>

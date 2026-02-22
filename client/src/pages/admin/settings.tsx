@@ -1,7 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Settings, Save, Palette, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
@@ -89,16 +87,6 @@ export default function AdminSettings() {
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    // Simular salvamento
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    toast({
-      title: 'Configurações salvas',
-      description: 'Suas configurações foram salvas com sucesso',
-    });
-  };
 
   return (
     <div className="space-y-8">
@@ -120,21 +108,10 @@ export default function AdminSettings() {
               Configure as opções gerais da plataforma
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="platform-name">Nome da Plataforma</Label>
-              <Input id="platform-name" placeholder="Aurius" defaultValue="Aurius" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="platform-description">Descrição</Label>
-              <Input id="platform-description" placeholder="Plataforma de cursos online" />
-            </div>
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={isSaving}>
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-              </Button>
-            </div>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Configurações gerais serão implementadas em breve.
+            </p>
           </CardContent>
         </Card>
 

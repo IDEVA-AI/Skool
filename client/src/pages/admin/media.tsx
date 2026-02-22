@@ -28,11 +28,11 @@ export default function AdminMedia() {
   const { toast } = useToast();
 
   const { data: files, isLoading, refetch } = useQuery({
-    queryKey: ['admin-media-files'],
+    queryKey: ['admin-media-files', uploadPath],
     queryFn: async () => {
       const { data, error } = await supabase.storage
         .from('course-media')
-        .list('lessons', {
+        .list(uploadPath, {
           limit: 100,
           offset: 0,
           sortBy: { column: 'created_at', order: 'desc' },
@@ -100,7 +100,7 @@ export default function AdminMedia() {
   const getPublicUrl = (fileName: string) => {
     const { data } = supabase.storage
       .from('course-media')
-      .getPublicUrl(`lessons/${fileName}`);
+      .getPublicUrl(`${uploadPath}/${fileName}`);
     return data.publicUrl;
   };
 

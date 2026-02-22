@@ -309,6 +309,66 @@ export function useCreateInvite() {
   });
 }
 
+// Atualizar role de um membro
+export function useUpdateMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ memberId, role, communityId }: { memberId: string; role: string; communityId: string }) => {
+      const { error } = await supabase
+        .from('community_members')
+        .update({ role })
+        .eq('id', memberId);
+
+      if (error) throw error;
+      return { communityId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['community-members', data.communityId] });
+    },
+  });
+}
+
+// Remover membro de uma comunidade
+export function useRemoveMember() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ memberId, communityId }: { memberId: string; communityId: string }) => {
+      const { error } = await supabase
+        .from('community_members')
+        .delete()
+        .eq('id', memberId);
+
+      if (error) throw error;
+      return { communityId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['community-members', data.communityId] });
+    },
+  });
+}
+
+// Deletar convite de comunidade
+export function useDeleteCommunityInvite() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ inviteId, communityId }: { inviteId: string; communityId: string }) => {
+      const { error } = await supabase
+        .from('community_invites')
+        .delete()
+        .eq('id', inviteId);
+
+      if (error) throw error;
+      return { communityId };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['community-invites', data.communityId] });
+    },
+  });
+}
+
 // Buscar convites de uma comunidade
 export function useCommunityInvites(communityId: string | null) {
   return useQuery({

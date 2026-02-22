@@ -29,12 +29,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { 
-  useCommunityBySlug, 
+import {
+  useCommunityBySlug,
   useCommunityMembers,
   useCommunityInvites,
   useCreateInvite,
-  useAcceptInvite,
+  useDeleteCommunityInvite,
+  useUpdateMemberRole,
+  useRemoveMember,
   type CommunityMember
 } from '@/hooks/use-communities';
 import { useToast } from '@/hooks/use-toast';
@@ -54,11 +56,37 @@ export default function AdminCommunityDetail() {
   const { data: invites, isLoading: invitesLoading } = useCommunityInvites(community?.id || null);
   
   const createInviteMutation = useCreateInvite();
+  const deleteInviteMutation = useDeleteCommunityInvite();
+  const updateRoleMutation = useUpdateMemberRole();
+  const removeMemberMutation = useRemoveMember();
   const { toast } = useToast();
-  
+
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteExpiresDays, setInviteExpiresDays] = useState(7);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [deletingInviteId, setDeletingInviteId] = useState<string | null>(null);
+  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+
+  const handleRoleChange = async (memberId: string, newRole: string) => {
+    if (!community) return;
+    try {
+      await updateRoleMutation.mutateAsync({
+        memberId,
+        role: newRole,
+        communityId: community.id,
+      });
+      toast({
+        title: 'Role atualizado',
+        description: 'O role do membro foi alterado com sucesso',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Erro',
+        description: error.message || 'Não foi possível alterar o role',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleCreateInvite = async () => {
     if (!community) return;
@@ -204,39 +232,71 @@ export default function AdminCommunityDetail() {
                       <TableHead>Usuário</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Membro desde</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {members.map((member) => (
-                      <TableRow key={member.id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                              {member.users?.name?.[0]?.toUpperCase() || member.users?.email?.[0]?.toUpperCase() || 'U'}
-                            </div>
-                            <div>
-                              <div className="font-medium">
-                                {member.users?.name || member.users?.email || 'Usuário'}
+                    {members.map((member) => {
+                      const isOwner = member.role === 'owner';
+                      return (
+                        <TableRow key={member.id}>
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                                {member.users?.name?.[0]?.toUpperCase() || member.users?.email?.[0]?.toUpperCase() || 'U'}
                               </div>
-                              <div className="text-sm text-muted-foreground">
-                                {member.users?.email}
+                              <div>
+                                <div className="font-medium">
+                                  {member.users?.name || member.users?.email || 'Usuário'}
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  {member.users?.email}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={getRoleBadgeVariant(member.role)}>
-                            {getRoleLabel(member.role)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(member.joined_at), {
-                            addSuffix: true,
-                            locale: ptBR,
-                          })}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                          </TableCell>
+                          <TableCell>
+                            {isOwner ? (
+                              <Badge variant={getRoleBadgeVariant(member.role)}>
+                                {getRoleLabel(member.role)}
+                              </Badge>
+                            ) : (
+                              <Select
+                                value={member.role}
+                                onValueChange={(value) => handleRoleChange(member.id, value)}
+                              >
+                                <SelectTrigger className="w-[140px] h-8 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="member">Membro</SelectItem>
+                                  <SelectItem value="moderator">Moderador</SelectItem>
+                                  <SelectItem value="admin">Administrador</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">
+                            {formatDistanceToNow(new Date(member.joined_at), {
+                              addSuffix: true,
+                              locale: ptBR,
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {!isOwner && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => setRemovingMemberId(member.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               ) : (
@@ -301,15 +361,25 @@ export default function AdminCommunityDetail() {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {!isUsed && !isExpired && (
+                            <div className="flex items-center justify-end gap-1">
+                              {!isUsed && !isExpired && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => copyInviteLink(invite.token)}
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => copyInviteLink(invite.token)}
+                                onClick={() => setDeletingInviteId(invite.id)}
+                                className="text-destructive hover:text-destructive"
                               >
-                                <Copy className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
-                            )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -376,6 +446,84 @@ export default function AdminCommunityDetail() {
               ) : (
                 'Criar Convite'
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={removingMemberId !== null} onOpenChange={(open) => !open && setRemovingMemberId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover membro</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover este membro da comunidade? Ele perderá o acesso ao conteúdo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!removingMemberId || !community) return;
+                try {
+                  await removeMemberMutation.mutateAsync({
+                    memberId: removingMemberId,
+                    communityId: community.id,
+                  });
+                  toast({
+                    title: 'Membro removido',
+                    description: 'O membro foi removido da comunidade',
+                  });
+                } catch (error: any) {
+                  toast({
+                    title: 'Erro',
+                    description: error.message || 'Não foi possível remover o membro',
+                    variant: 'destructive',
+                  });
+                }
+                setRemovingMemberId(null);
+              }}
+              className="bg-destructive text-destructive-foreground"
+            >
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deletingInviteId !== null} onOpenChange={(open) => !open && setDeletingInviteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja deletar este convite? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (!deletingInviteId || !community) return;
+                try {
+                  await deleteInviteMutation.mutateAsync({
+                    inviteId: deletingInviteId,
+                    communityId: community.id,
+                  });
+                  toast({
+                    title: 'Convite deletado',
+                    description: 'O convite foi removido com sucesso',
+                  });
+                } catch (error: any) {
+                  toast({
+                    title: 'Erro',
+                    description: error.message || 'Não foi possível deletar o convite',
+                    variant: 'destructive',
+                  });
+                }
+                setDeletingInviteId(null);
+              }}
+              className="bg-destructive text-destructive-foreground"
+            >
+              Deletar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
