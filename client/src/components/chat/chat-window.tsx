@@ -91,7 +91,7 @@ export function ChatWindow({ conversationId }: ChatWindowProps) {
                 )}
               >
                 {showAvatar ? (
-                  <Avatar className="h-8 w-8 shrink-0 border border-border/50">
+                  <Avatar className="h-8 w-8 shrink-0 border border-zinc-200">
                     <AvatarImage
                       src={getAvatarUrl(
                         message.sender?.avatar_url,

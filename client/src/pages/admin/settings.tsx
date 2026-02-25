@@ -91,7 +91,7 @@ export default function AdminSettings() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-heading font-bold text-foreground">Configurações</h1>
+        <h1 className="text-3xl font-bold text-foreground">Configurações</h1>
         <p className="text-muted-foreground mt-2">
           Gerencie as configurações da plataforma
         </p>
@@ -150,7 +150,7 @@ export default function AdminSettings() {
                     'hover:scale-105 hover:shadow-md',
                     selectedTheme === key
                       ? 'border-primary shadow-md'
-                      : 'border-border hover:border-primary/50'
+                      : 'border-zinc-200 hover:border-primary/50'
                   )}
                 >
                   {selectedTheme === key && (

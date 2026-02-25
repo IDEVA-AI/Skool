@@ -11,7 +11,7 @@ export default function Premium() {
         <Badge variant="secondary" className="bg-premium/10 text-premium hover:bg-premium/20 border-premium/20 px-3 py-1">
           <Crown className="h-3.5 w-3.5 mr-1.5" /> Acesso Premium
         </Badge>
-        <h1 className="text-4xl md:text-5xl font-heading font-bold text-foreground tracking-tight">
+        <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
           Desbloqueie seu potencial máximo.
         </h1>
         <p className="text-lg text-muted-foreground">
@@ -20,7 +20,7 @@ export default function Premium() {
       </header>
 
       {/* Hero Banner */}
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-slate-900 text-white shadow-xl mx-auto max-w-4xl border border-white/10">
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-gray-900 to-slate-900 text-white shadow-xl mx-auto max-w-4xl border border-zinc-200">
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-premium/20 to-transparent"></div>
         
@@ -39,7 +39,7 @@ export default function Premium() {
               </Button>
             </div>
           </div>
-          <div className="relative aspect-video rounded-lg overflow-hidden shadow-2xl border border-white/10 rotate-2 hover:rotate-0 transition-transform duration-500">
+          <div className="relative aspect-video rounded-lg overflow-hidden shadow-2xl border border-zinc-200 rotate-2 hover:rotate-0 transition-transform duration-500">
              <img src={coverPurple} alt="Premium Course" className="object-cover w-full h-full" />
              <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
                 <Lock className="h-12 w-12 text-white/80" />
@@ -50,7 +50,7 @@ export default function Premium() {
 
       {/* Features Grid */}
       <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        <Card className="border-border/50 shadow-sm bg-card hover:border-premium/30 transition-colors">
+        <Card className="border-zinc-200 shadow-sm bg-card hover:border-premium/30 transition-colors">
           <CardHeader>
             <div className="h-10 w-10 rounded-lg bg-premium/10 flex items-center justify-center text-premium mb-2">
               <Zap className="h-5 w-5" />
@@ -64,7 +64,7 @@ export default function Premium() {
           </CardContent>
         </Card>
         
-        <Card className="border-border/50 shadow-sm bg-card hover:border-premium/30 transition-colors">
+        <Card className="border-zinc-200 shadow-sm bg-card hover:border-premium/30 transition-colors">
           <CardHeader>
             <div className="h-10 w-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
               <Star className="h-5 w-5" />
@@ -78,7 +78,7 @@ export default function Premium() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/50 shadow-sm bg-card hover:border-premium/30 transition-colors">
+        <Card className="border-zinc-200 shadow-sm bg-card hover:border-premium/30 transition-colors">
           <CardHeader>
             <div className="h-10 w-10 rounded-lg bg-green-500/10 flex items-center justify-center text-green-500 mb-2">
               <Crown className="h-5 w-5" />

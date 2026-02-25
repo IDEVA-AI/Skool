@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link as LinkIcon, Smile, Send, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { GifPicker } from './gif-picker';
 
 interface CommentComposerProps {
   currentUserId: string;
@@ -37,6 +38,7 @@ export const CommentComposer = forwardRef<CommentComposerHandle, CommentComposer
 }, ref) => {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useImperativeHandle(ref, () => ({
@@ -95,7 +97,7 @@ export const CommentComposer = forwardRef<CommentComposerHandle, CommentComposer
 
   return (
     <div className={cn('flex gap-3', className)}>
-      <Avatar className="h-9 w-9 border border-border/50 shrink-0">
+      <Avatar className="h-9 w-9 border border-zinc-200 shrink-0">
         <AvatarImage src={currentUserAvatar} alt={currentUserName} />
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
@@ -106,7 +108,7 @@ export const CommentComposer = forwardRef<CommentComposerHandle, CommentComposer
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder={replyingTo ? `Respondendo a @${replyingTo.authorName}...` : placeholder}
-            className="w-full bg-muted/50 rounded-xl pl-4 pr-24 py-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none min-h-[52px] max-h-32 text-foreground placeholder:text-muted-foreground border border-border/50 shadow-sm"
+            className="w-full bg-muted/50 rounded-xl pl-4 pr-24 py-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none min-h-[52px] max-h-32 text-foreground placeholder:text-muted-foreground border border-zinc-200 shadow-sm"
             onKeyDown={handleKeyDown}
             autoFocus={autoFocus}
             rows={1}
@@ -130,6 +132,7 @@ export const CommentComposer = forwardRef<CommentComposerHandle, CommentComposer
               type="button"
               className="px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors rounded hover:bg-muted font-medium"
               title="Inserir GIF"
+              onClick={() => setGifPickerOpen(true)}
             >
               GIF
             </button>
@@ -157,6 +160,15 @@ export const CommentComposer = forwardRef<CommentComposerHandle, CommentComposer
           </Button>
         </div>
       </div>
+
+      <GifPicker
+        isOpen={gifPickerOpen}
+        onClose={() => setGifPickerOpen(false)}
+        onSelect={(gif) => {
+          const gifHtml = `<img src="${gif.url}" alt="${gif.title}" />`;
+          setContent(prev => prev ? `${prev}\n${gifHtml}` : gifHtml);
+        }}
+      />
     </div>
   );
 });

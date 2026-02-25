@@ -148,10 +148,10 @@ export default function Courses() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6">
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-zinc-200 pb-6">
         <div>
-          <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm">Classroom</h1>
-          <p className="text-muted-foreground mt-2 font-medium">Seus treinamentos e materiais exclusivos.</p>
+          <h1 className="text-4xl font-bold tracking-tight text-zinc-900">Classroom</h1>
+          <p className="text-zinc-500 mt-2 font-medium">Seus treinamentos e materiais exclusivos.</p>
         </div>
         <div className="flex items-center gap-2 w-full md:w-auto">
           <div className="relative w-full md:w-64">
@@ -237,12 +237,12 @@ export default function Courses() {
 
             const statusBadge = () => {
               if (isEnrolled) {
-                return { text: 'INSCRITO', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' };
+                return { text: 'INSCRITO', className: 'bg-emerald-50 text-emerald-600' };
               }
               if ((course as any).is_locked) {
-                return { text: 'BLOQUEADO', className: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400' };
+                return { text: 'BLOQUEADO', className: 'bg-red-50 text-red-600' };
               }
-              return { text: 'GRATUITO', className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' };
+              return { text: 'GRATUITO', className: 'bg-blue-50 text-blue-600' };
             };
 
             const badge = statusBadge();
@@ -253,7 +253,7 @@ export default function Courses() {
                 onClick={() => handleCardClick(course)}
                 className="cursor-pointer"
               >
-                <Card className="h-full flex flex-col overflow-hidden glass-card hover:shadow-xl hover:-translate-y-1 hover:border-white/20 transition-all duration-500 group">
+                <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 group">
                   <div className="relative aspect-video bg-black overflow-hidden flex items-center justify-center">
                     {(() => {
                       const coverImageUrl = getCourseCoverImageUrl(course);
@@ -275,7 +275,7 @@ export default function Courses() {
                         <Lock className="h-12 w-12 text-white/80" />
                       </div>
                     )}
-                    <h3 className="relative z-10 font-heading font-black text-2xl tracking-tighter text-white text-center px-4 uppercase transform -rotate-2 group-hover:rotate-0 transition-transform duration-500 drop-shadow-2xl">
+                    <h3 className="relative z-10 font-bold text-2xl tracking-tight text-white text-center px-4 uppercase transform -rotate-2 group-hover:rotate-0 transition-transform duration-500 drop-shadow-2xl">
                       {course.image_text || course.title.substring(0, 10).toUpperCase()}
                     </h3>
                     {!((course as any).is_locked) && (
@@ -292,7 +292,7 @@ export default function Courses() {
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${badge.className}`}>
                         {badge.text}
                       </span>
-                      <h3 className="font-heading font-bold text-lg tracking-tight leading-tight truncate flex-1">
+                      <h3 className="font-semibold text-lg tracking-tight leading-tight truncate flex-1 text-zinc-900">
                         {course.title}
                       </h3>
                     </div>
@@ -301,7 +301,7 @@ export default function Courses() {
                     </p>
                   </CardContent>
 
-                  <CardFooter className="px-4 py-4 bg-transparent border-t border-white/5 mt-auto">
+                  <CardFooter className="px-4 py-4 bg-transparent border-t border-zinc-100 mt-auto">
                     {isEnrolled ? (
                       <div className="w-full space-y-1.5">
                         <CourseProgress courseId={course.id} />

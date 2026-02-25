@@ -6,8 +6,8 @@ import { Comment } from '@/types/social';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ReactionBar } from './reaction-bar';
-import { useReactions } from '@/hooks/use-reactions';
-import { ReactionType } from '@/types/social';
+import { Reaction, ReactionType } from '@/types/social';
+import { useToggleCommentReaction } from '@/hooks/use-reactions';
 import { CommentList } from './comment-list';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,27 +73,28 @@ function CommentItem({
   const canDelete = canComment(user, userRole || null, 'delete', commentForPermission);
   const showMenu = canUpdate || canDelete;
   
-  const { reactions, userReaction, toggleReaction } = useReactions({
-    initialReactions: comment.reactions,
-    currentUserId,
-    currentUserName,
-  });
+  // Persisted comment reactions with optimistic local state
+  const toggleCommentReactionMutation = useToggleCommentReaction();
+  const [reactions, setReactions] = useState<Reaction[]>(comment.reactions || []);
+  const userReaction = reactions.find(r => r.userId === currentUserId)?.type || null;
 
-  // Sync reactions changes with parent
-  useEffect(() => {
-    if (!onReactionChange) return;
-    
-    const hasChanges = 
-      reactions.length !== comment.reactions.length ||
-      reactions.some((r, i) => {
-        const oldR = comment.reactions[i];
-        return !oldR || r.type !== oldR.type || r.userId !== oldR.userId;
-      });
-    
-    if (hasChanges) {
-      onReactionChange(comment.id, reactions);
-    }
-  }, [reactions, comment.id, comment.reactions, onReactionChange]);
+  const toggleReaction = (type: ReactionType) => {
+    setReactions(prev => {
+      const existingIdx = prev.findIndex(r => r.userId === currentUserId);
+      if (existingIdx >= 0) {
+        if (prev[existingIdx].type === type) {
+          return prev.filter(r => r.userId !== currentUserId);
+        } else {
+          const updated = [...prev];
+          updated[existingIdx] = { ...updated[existingIdx], type };
+          return updated;
+        }
+      } else {
+        return [...prev, { id: `temp-${Date.now()}`, type, userId: currentUserId, userName: currentUserName }];
+      }
+    });
+    toggleCommentReactionMutation.mutate({ commentId: parseInt(comment.id), reactionType: type });
+  };
 
   const hasReplies = comment.replies && comment.replies.length > 0;
   const canReply = depth < maxDepth;

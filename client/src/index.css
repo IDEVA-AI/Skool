@@ -1,8 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -25,17 +23,18 @@
   --color-ring: hsl(var(--ring));
   --color-premium: hsl(var(--premium));
   --color-premium-foreground: hsl(var(--premium-foreground));
+  --color-accent-orange: hsl(var(--accent-orange));
 
   --font-sans: "Inter", system-ui, sans-serif;
-  --font-heading: "Source Sans 3", system-ui, sans-serif;
+  --font-heading: "Inter", system-ui, sans-serif;
 
-  --radius-sm: 0.3rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
 }
 
 :root {
-  /* Ultra-clean Light Mode */
+  /* Aura Light Mode — zinc neutrals, orange accent */
   --background: 0 0% 100%;
   --foreground: 240 10% 4%;
 
@@ -60,48 +59,22 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
 
-  --border: 240 6% 90%;
-  --input: 240 6% 90%;
+  --border: 240 6% 92%;
+  --input: 240 6% 92%;
   --ring: 240 6% 10%;
 
   --premium: 259 57% 59%;
   --premium-foreground: 0 0% 100%;
 
-  --radius: 0.75rem;
-}
+  --accent-orange: 25 95% 53%;
 
-.dark {
-  /* Pitch Black & Abyssal Dark Mode */
-  --background: 0 0% 0%; /* Pitch Black */
-  --foreground: 0 0% 98%;
+  --radius: 1rem;
 
-  --card: 240 4% 5%; /* Very dark grey, almost black */
-  --card-foreground: 0 0% 98%;
-
-  --popover: 240 4% 5%;
-  --popover-foreground: 0 0% 98%;
-
-  --primary: 0 0% 98%;
-  --primary-foreground: 240 6% 10%;
-
-  --secondary: 240 4% 10%;
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 240 4% 10%;
-  --muted-foreground: 240 5% 65%;
-
-  --accent: 240 4% 10%;
-  --accent-foreground: 0 0% 98%;
-
-  --destructive: 0 63% 31%;
-  --destructive-foreground: 0 0% 98%;
-
-  --border: 0 0% 15%; /* #262626 */
-  --input: 0 0% 15%;
-  --ring: 240 5% 84%;
-  
-  --premium: 259 57% 59%;
-  --premium-foreground: 0 0% 100%;
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 240 10% 4%;
+  --sidebar-border: 240 6% 92%;
+  --sidebar-accent: 240 5% 96%;
+  --sidebar-accent-foreground: 240 6% 10%;
 }
 
 @layer base {
@@ -110,9 +83,6 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    /* Subtle radial glow at the top for dark mode */
-    background-image: radial-gradient(circle at 50% 0%, hsl(var(--secondary) / 0.5) 0%, transparent 40%);
-    background-attachment: fixed;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading font-semibold tracking-tight;
@@ -120,11 +90,66 @@
 }
 
 @layer utilities {
-  .glass {
-    @apply bg-background/40 backdrop-blur-2xl border border-white/5;
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
-  
+
   .glass-card {
-    @apply bg-card/60 backdrop-blur-xl border border-white/5 shadow-sm;
+    background: rgba(255, 255, 255, 0.10);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.20);
   }
+}
+
+/* Feed post card hover line reveal */
+.feed-card {
+  position: relative;
+  overflow: hidden;
+}
+.feed-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: hsl(var(--accent-orange));
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  z-index: 1;
+  border-radius: 0 2px 2px 0;
+}
+.feed-card:hover::before {
+  transform: scaleY(1);
+  transform-origin: top;
+}
+
+/* Subtle noise grain overlay for feed */
+.feed-grain::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  opacity: 0.012;
+  pointer-events: none;
+  z-index: 50;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* Staggered fade-in for feed posts */
+@keyframes feed-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.feed-item-animate {
+  animation: feed-item-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }

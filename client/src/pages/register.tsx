@@ -74,10 +74,10 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-50">
+      <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-zinc-200">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading font-bold">Criar Conta</CardTitle>
+          <CardTitle className="text-2xl font-bold">Criar Conta</CardTitle>
           <CardDescription>
             Registre-se para começar a aprender
           </CardDescription>
@@ -146,7 +146,7 @@ export default function Register() {
           <div className="mt-4 text-center text-sm">
             <button
               onClick={() => setLocation('/login')}
-              className="text-primary hover:underline"
+              className="text-orange-500 hover:text-orange-600 hover:underline"
             >
               Já tem conta? Faça login
             </button>

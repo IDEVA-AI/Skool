@@ -170,7 +170,7 @@ export function RichTextEditor({ value, onChange, placeholder, className }: Rich
           onBlur={() => setIsFocused(false)}
           className={cn(
             "min-h-[120px] px-4 py-3 text-base focus:outline-none",
-            "prose prose-sm dark:prose-invert max-w-none",
+            "prose prose-sm max-w-none",
             "text-foreground",
             "[&_strong]:font-bold [&_em]:italic [&_u]:underline",
             "[&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6",

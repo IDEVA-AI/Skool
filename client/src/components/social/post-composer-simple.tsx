@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TipTapEditor } from '@/components/tiptap-editor';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Feather } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { VisuallyHidden } from '@radix-ui/react-visually-hidden';
@@ -19,15 +18,6 @@ interface PostComposerSimpleProps {
   className?: string;
 }
 
-/**
- * PostComposerSimple - Composer simples que abre modal ao clicar
- * 
- * Comportamento:
- * - Mostra apenas input "Escreva algo..." como trigger
- * - Ao clicar, abre um modal com título e editor de conteúdo
- * - O campo de título recebe foco automaticamente quando o modal abre
- * - Modal pode ser fechado clicando fora ou no botão Cancelar
- */
 export function PostComposerSimple({
   avatar,
   name,
@@ -42,7 +32,6 @@ export function PostComposerSimple({
   const [content, setContent] = useState('');
   const titleInputRef = useRef<HTMLInputElement>(null);
 
-  // Verificar se há conteúdo válido
   const hasTextContent = (html: string): boolean => {
     if (!html) return false;
     const tempDiv = document.createElement('div');
@@ -54,27 +43,21 @@ export function PostComposerSimple({
   const isValid = title.trim().length > 0 && content.trim().length > 0 && hasTextContent(content);
   const isDisabled = isPublishing || !isValid;
 
-  // Focar no campo de título quando o modal abrir
   useEffect(() => {
     if (isModalOpen && titleInputRef.current) {
-      // Pequeno delay para garantir que o modal está totalmente renderizado
-      setTimeout(() => {
-        titleInputRef.current?.focus();
-      }, 100);
+      setTimeout(() => titleInputRef.current?.focus(), 100);
     }
   }, [isModalOpen]);
 
   const handlePublish = async () => {
     if (isDisabled) return;
-
     try {
       await onPublish(title.trim(), content.trim());
-      // Limpar e fechar modal após publicação
       setTitle('');
       setContent('');
       setIsModalOpen(false);
     } catch (error) {
-      // Erro será tratado pelo componente pai
+      // parent handles error
     }
   };
 
@@ -82,10 +65,6 @@ export function PostComposerSimple({
     setTitle('');
     setContent('');
     setIsModalOpen(false);
-  };
-
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
   };
 
   const initials = name
@@ -97,49 +76,49 @@ export function PostComposerSimple({
 
   return (
     <>
-      {/* Trigger Card */}
-      <Card className={cn('border-border/50 shadow-sm overflow-hidden transition-all duration-300', className)}>
-        <CardContent 
-          className="p-4 flex items-center gap-4 cursor-text" 
-          onClick={handleOpenModal}
-        >
-          <Avatar className="h-10 w-10 shrink-0">
-            <AvatarImage src={avatar} />
-            <AvatarFallback>{initials}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Escreva algo..."
-              className="w-full bg-transparent border-none outline-none text-muted-foreground cursor-text"
-              readOnly
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Trigger */}
+      <div
+        className={cn(
+          'group flex items-center gap-4 py-5 px-5 cursor-text',
+          'border border-zinc-200 rounded-2xl',
+          'bg-white hover:bg-zinc-50 transition-all duration-300',
+          'hover:border-zinc-300 hover:shadow-sm',
+          className
+        )}
+        onClick={() => setIsModalOpen(true)}
+      >
+        <Avatar className="h-8 w-8 shrink-0">
+          <AvatarImage src={avatar} />
+          <AvatarFallback className="text-xs bg-muted text-muted-foreground">{initials}</AvatarFallback>
+        </Avatar>
+        <span className="flex-1 text-sm text-zinc-400">
+          Compartilhe algo com a comunidade...
+        </span>
+        <Feather className="h-4 w-4 text-muted-foreground/20 group-hover:text-muted-foreground/40 transition-colors" />
+      </div>
 
       {/* Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0 border-zinc-200 bg-white">
           <VisuallyHidden>
             <DialogTitle>Criar novo post</DialogTitle>
           </VisuallyHidden>
 
-          <div className="p-6 space-y-4 overflow-y-auto flex-1">
-            {/* Header */}
-            <div className="flex items-center gap-3 mb-2">
-              <Avatar className="h-10 w-10 shrink-0">
+          <div className="p-8 space-y-5 overflow-y-auto flex-1">
+            {/* Author */}
+            <div className="flex items-center gap-3">
+              <Avatar className="h-8 w-8 shrink-0">
                 <AvatarImage src={avatar} />
-                <AvatarFallback>{initials}</AvatarFallback>
+                <AvatarFallback className="text-xs bg-muted text-muted-foreground">{initials}</AvatarFallback>
               </Avatar>
-              <div className="flex items-center gap-1 text-sm">
+              <div className="flex items-center gap-1.5 text-[13px]">
                 <span className="font-semibold text-foreground">{name}</span>
                 {context && (
                   <>
-                    <span className="text-muted-foreground">publicando em</span>
+                    <span className="text-muted-foreground/40">em</span>
                     <span className={cn(
-                      "font-medium",
-                      contextHighlight ? "text-primary" : "text-muted-foreground"
+                      'font-medium',
+                      contextHighlight ? 'text-foreground' : 'text-muted-foreground/60'
                     )}>
                       {context}
                     </span>
@@ -148,16 +127,14 @@ export function PostComposerSimple({
               </div>
             </div>
 
-            {/* Título */}
+            {/* Title */}
             <Input
               ref={titleInputRef}
-              placeholder="Assunto"
-              className="text-6xl font-bold border-none shadow-none px-0 focus-visible:ring-0 placeholder:text-muted-foreground/50 h-auto py-0"
-              style={{ fontSize: '1.4rem', lineHeight: '1' }}
+              placeholder="Titulo"
+              className="font-semibold text-2xl border-none shadow-none px-0 focus-visible:ring-0 placeholder:text-zinc-300 h-auto py-0 tracking-tight"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => {
-                // Ctrl+A / Cmd+A para selecionar todo o texto
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
                   e.preventDefault();
                   e.stopPropagation();
@@ -166,7 +143,10 @@ export function PostComposerSimple({
               }}
             />
 
-            {/* Editor de Conteúdo */}
+            {/* Divider */}
+            <div className="h-px bg-border/20" />
+
+            {/* Editor */}
             <TipTapEditor
               placeholder="Escreva algo..."
               value={content}
@@ -175,41 +155,34 @@ export function PostComposerSimple({
             />
           </div>
 
-          {/* Actions Bar */}
-          <div className="flex items-center justify-between pt-4 px-6 pb-6 border-t border-border/10 bg-background">
-            <div className="flex items-center gap-4 text-muted-foreground">
-              {/* Placeholder para futuras ações */}
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                className="text-muted-foreground font-medium hover:bg-muted/50 hover:text-foreground"
-                onClick={handleCancel}
-                disabled={isPublishing}
-              >
-                Cancelar
-              </Button>
-              <Button
-                className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium px-6 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                onClick={handlePublish}
-                disabled={isDisabled}
-                title={!isValid ? 'Preencha título e conteúdo' : undefined}
-              >
-                {isPublishing ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Publicando...
-                  </>
-                ) : (
-                  'Publicar'
-                )}
-              </Button>
-            </div>
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 px-8 py-5 border-t border-border/20">
+            <Button
+              variant="ghost"
+              className="text-muted-foreground/50 font-medium hover:text-foreground hover:bg-transparent text-sm"
+              onClick={handleCancel}
+              disabled={isPublishing}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="font-medium px-6 text-sm rounded-full"
+              onClick={handlePublish}
+              disabled={isDisabled}
+              title={!isValid ? 'Preencha titulo e conteudo' : undefined}
+            >
+              {isPublishing ? (
+                <>
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  Publicando...
+                </>
+              ) : (
+                'Publicar'
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
     </>
   );
 }
-

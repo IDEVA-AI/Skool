@@ -191,7 +191,7 @@ export default function AdminCommunityDetail() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">{community.name}</h1>
+          <h1 className="text-3xl font-bold text-foreground">{community.name}</h1>
           <p className="text-muted-foreground mt-2">
             Gerencie membros e convites desta comunidade
           </p>

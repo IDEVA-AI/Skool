@@ -1,118 +1,69 @@
-import { useState, useCallback } from 'react';
-import { Reaction, ReactionType } from '@/types/social';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { togglePostReaction, toggleCommentReaction, type ReactionType } from '@/services/reactions';
+import { Reaction } from '@/types/social';
 
-interface UseReactionsProps {
-  initialReactions?: Reaction[];
-  currentUserId: string;
-  currentUserName: string;
-}
+/**
+ * Hook for toggling a post reaction with optimistic updates.
+ * Replaces the old local-state-only useReactions hook.
+ */
+export function useTogglePostReaction() {
+  const queryClient = useQueryClient();
 
-interface UseReactionsReturn {
-  reactions: Reaction[];
-  reactionCounts: Record<ReactionType, number>;
-  userReaction: ReactionType | null;
-  toggleReaction: (type: ReactionType) => void;
-  addReaction: (type: ReactionType) => void;
-  removeReaction: () => void;
+  return useMutation({
+    mutationFn: ({ postId, reactionType }: { postId: number; reactionType: ReactionType }) =>
+      togglePostReaction(postId, reactionType),
+    onMutate: async ({ postId, reactionType }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['all-posts'] });
+
+      // Snapshot previous value
+      const previousPosts = queryClient.getQueryData(['all-posts']);
+
+      // Optimistic update — handled at the component level via local state
+      return { previousPosts };
+    },
+    onError: (_err, _vars, context) => {
+      // Rollback on error
+      if (context?.previousPosts) {
+        queryClient.setQueryData(['all-posts'], context.previousPosts);
+      }
+    },
+    onSettled: () => {
+      // Refetch to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['all-posts'] });
+    },
+  });
 }
 
 /**
- * Reusable hook for managing reactions (likes, loves, laughs)
- * 
- * Features:
- * - Toggle reactions
- * - Track user's current reaction
- * - Calculate reaction counts by type
- * - Optimized for performance
+ * Derive reaction counts and user reaction from a Reaction[] array.
+ * Pure computation, no hooks needed.
  */
-export function useReactions({
-  initialReactions = [],
-  currentUserId,
-  currentUserName,
-}: UseReactionsProps): UseReactionsReturn {
-  const [reactions, setReactions] = useState<Reaction[]>(initialReactions);
+export function getReactionState(reactions: Reaction[], currentUserId: string) {
+  const reactionCounts = { like: 0, love: 0, laugh: 0 } as Record<ReactionType, number>;
+  let userReaction: ReactionType | null = null;
 
-  // Find user's current reaction
-  const userReaction = reactions.find((r) => r.userId === currentUserId)?.type || null;
+  for (const r of reactions) {
+    reactionCounts[r.type] = (reactionCounts[r.type] || 0) + 1;
+    if (r.userId === currentUserId) {
+      userReaction = r.type;
+    }
+  }
 
-  // Calculate reaction counts by type
-  const reactionCounts = reactions.reduce(
-    (acc, reaction) => {
-      acc[reaction.type] = (acc[reaction.type] || 0) + 1;
-      return acc;
-    },
-    { like: 0, love: 0, laugh: 0 } as Record<ReactionType, number>
-  );
-
-  const toggleReaction = useCallback(
-    (type: ReactionType) => {
-      setReactions((prev) => {
-        const existingIndex = prev.findIndex((r) => r.userId === currentUserId);
-
-        if (existingIndex >= 0) {
-          const existing = prev[existingIndex];
-          if (existing.type === type) {
-            // Remove reaction if clicking the same type
-            return prev.filter((r) => r.userId !== currentUserId);
-          } else {
-            // Replace reaction with new type
-            const updated = [...prev];
-            updated[existingIndex] = {
-              id: existing.id,
-              type,
-              userId: currentUserId,
-              userName: currentUserName,
-            };
-            return updated;
-          }
-        } else {
-          // Add new reaction
-          return [
-            ...prev,
-            {
-              id: `reaction-${Date.now()}-${Math.random()}`,
-              type,
-              userId: currentUserId,
-              userName: currentUserName,
-            },
-          ];
-        }
-      });
-    },
-    [currentUserId, currentUserName]
-  );
-
-  const addReaction = useCallback(
-    (type: ReactionType) => {
-      setReactions((prev) => {
-        const exists = prev.some((r) => r.userId === currentUserId);
-        if (exists) return prev;
-
-        return [
-          ...prev,
-          {
-            id: `reaction-${Date.now()}-${Math.random()}`,
-            type,
-            userId: currentUserId,
-            userName: currentUserName,
-          },
-        ];
-      });
-    },
-    [currentUserId, currentUserName]
-  );
-
-  const removeReaction = useCallback(() => {
-    setReactions((prev) => prev.filter((r) => r.userId !== currentUserId));
-  }, [currentUserId]);
-
-  return {
-    reactions,
-    reactionCounts,
-    userReaction,
-    toggleReaction,
-    addReaction,
-    removeReaction,
-  };
+  return { reactionCounts, userReaction, totalReactions: reactions.length };
 }
 
+/**
+ * Hook for toggling a comment reaction with optimistic updates.
+ */
+export function useToggleCommentReaction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ commentId, reactionType }: { commentId: number; reactionType: ReactionType }) =>
+      toggleCommentReaction(commentId, reactionType),
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+  });
+}

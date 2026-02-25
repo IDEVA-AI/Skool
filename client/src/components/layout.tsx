@@ -3,10 +3,9 @@ import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { LogOut, Settings, Menu, ChevronsUpDown, Check, Plus, Compass, Search, MessageSquare, Bell, Moon, Sun, Users, LayoutGrid, BookmarkCheck } from "lucide-react";
+import { LogOut, Settings, Menu, ChevronsUpDown, Check, Plus, Compass, Search, MessageSquare, Bell, Users, LayoutGrid, BookmarkCheck } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useState } from "react";
-import { useTheme } from "@/components/theme-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +38,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { selectedCommunity, setSelectedCommunity, isLoading: communityLoading, communitySlug } = useSelectedCommunity();
-  const { theme, setTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { toast } = useToast();
   const isAdmin = useIsAdmin();
@@ -49,7 +47,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
-  // Helper para adicionar prefixo /c/:slug aos links quando uma comunidade está selecionada
   const getLinkWithCommunity = (href: string) => {
     if (communitySlug && !href.startsWith('/admin') && !href.startsWith('/login') && !href.startsWith('/register')) {
       return `/c/${communitySlug}${href === '/' ? '' : href}`;
@@ -76,13 +73,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     isPremium,
   } : null;
 
-  // Collapse by default, manual toggle
   const isCollapsed = !isSidebarExpanded;
 
   const SidebarContent = ({ forceExpanded = false }: { forceExpanded?: boolean }) => {
     const collapsed = isCollapsed && !forceExpanded;
 
-    // Fallback para quando selectedCommunity é null ou ainda está carregando
     const displayCommunity = selectedCommunity || (communityLoading ? {
       id: 'loading',
       name: 'Carregando...',
@@ -100,17 +95,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={cn(
           "flex h-full flex-col transition-all duration-300",
           forceExpanded
-            ? "bg-card border-r border-border/50"
-            : "glass shadow-2xl rounded-2xl overflow-hidden"
+            ? "bg-white border-r border-zinc-200"
+            : "bg-white shadow-sm rounded-2xl border border-zinc-200 overflow-hidden"
         )}
         onClick={() => !forceExpanded && setIsSidebarExpanded(true)}
       >
         {/* Community Switcher */}
-        <div className={cn("flex h-16 items-center border-b border-border/40", collapsed ? "justify-center px-2" : "px-4")}>
+        <div className={cn("flex h-16 items-center border-b border-zinc-100", collapsed ? "justify-center px-2" : "px-4")}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className={cn("hover:bg-muted/50", collapsed ? "h-10 w-10 p-0 rounded-full justify-center" : "w-full justify-between px-2")}>
-                <div className="flex items-center gap-2 font-heading font-bold text-sm tracking-tight text-primary truncate">
+              <Button variant="ghost" className={cn("hover:bg-zinc-50", collapsed ? "h-10 w-10 p-0 rounded-full justify-center" : "w-full justify-between px-2")}>
+                <div className="flex items-center gap-2 font-semibold text-sm tracking-tight text-zinc-900 truncate">
                   {displayCommunity.logo_url ? (
                     <img
                       src={displayCommunity.logo_url}
@@ -118,13 +113,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       className="h-6 w-6 rounded object-cover shrink-0"
                     />
                   ) : (
-                    <div className="h-6 w-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-xs font-medium shrink-0">
+                    <div className="h-6 w-6 rounded bg-zinc-900 text-white flex items-center justify-center text-xs font-medium shrink-0">
                       {displayCommunity.name?.slice(0, 2).toUpperCase() || '👥'}
                     </div>
                   )}
                   {!collapsed && <span className="truncate">{displayCommunity.name}</span>}
                 </div>
-                {!collapsed && <ChevronsUpDown className="h-4 w-4 text-muted-foreground shrink-0" />}
+                {!collapsed && <ChevronsUpDown className="h-4 w-4 text-zinc-400 shrink-0" />}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-60" align="start" side={collapsed ? "right" : "bottom"}>
@@ -133,7 +128,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                className="gap-2 text-muted-foreground"
+                className="gap-2 text-zinc-500"
                 onClick={() => {
                   setLocation(getLinkWithCommunity('/admin/communities'));
                   setIsMobileOpen(false);
@@ -141,17 +136,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 <Plus className="h-4 w-4" /> Criar comunidade
               </DropdownMenuItem>
-              <DropdownMenuItem className="gap-2 text-muted-foreground">
+              <DropdownMenuItem className="gap-2 text-zinc-500">
                 <Compass className="h-4 w-4" /> Descobrir comunidades
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {communitiesLoading ? (
                 <DropdownMenuItem disabled className="gap-2">
-                  <span className="text-sm text-muted-foreground">Carregando...</span>
+                  <span className="text-sm text-zinc-400">Carregando...</span>
                 </DropdownMenuItem>
               ) : communities.length === 0 ? (
                 <DropdownMenuItem disabled className="gap-2">
-                  <span className="text-sm text-muted-foreground">Nenhuma comunidade</span>
+                  <span className="text-sm text-zinc-400">Nenhuma comunidade</span>
                 </DropdownMenuItem>
               ) : (
                 communities.map((comm) => (
@@ -170,7 +165,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         className="h-5 w-5 rounded object-cover"
                       />
                     ) : (
-                      <div className="h-5 w-5 rounded bg-muted flex items-center justify-center text-xs font-medium">
+                      <div className="h-5 w-5 rounded bg-zinc-100 flex items-center justify-center text-xs font-medium">
                         {comm.name?.slice(0, 2).toUpperCase() || '👥'}
                       </div>
                     )}
@@ -184,7 +179,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         <ScrollArea className={cn("flex-1 py-6", collapsed ? "px-2" : "px-4")}>
-          <nav className="flex flex-col gap-2">
+          <nav className="flex flex-col gap-1">
             {navigation.map((item) => {
               const Icon = item.icon;
               const linkHref = getLinkWithCommunity(item.href);
@@ -194,11 +189,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   key={item.name}
                   href={linkHref}
                   className={cn(
-                    "flex items-center rounded-md text-sm font-medium transition-all duration-200 group relative",
+                    "flex items-center rounded-lg text-sm font-medium transition-all duration-200 group relative",
                     collapsed ? "justify-center p-2" : "gap-3 px-3 py-2.5",
                     isActive
-                      ? "bg-primary/5 text-primary shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      ? "bg-zinc-100 text-zinc-900 font-medium"
+                      : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
                   )}
                   onClick={(e) => {
                     e.preventDefault();
@@ -207,7 +202,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   }}
                   title={collapsed ? item.name : undefined}
                 >
-                  <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-primary" : "text-muted-foreground")} />
+                  <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")} />
                   {!collapsed && <span>{item.name}</span>}
                 </Link>
               );
@@ -215,24 +210,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </nav>
         </ScrollArea>
 
-        <div className={cn("border-t border-border/40", collapsed ? "p-2" : "p-4")}>
+        <div className={cn("border-t border-zinc-100", collapsed ? "p-2" : "p-4")}>
           {currentUser && (
             <>
               <button
                 onClick={() => setLocation(getLinkWithCommunity('/profile'))}
                 className={cn(
-                  "flex items-center rounded-lg bg-muted/30 mb-3 w-full transition-colors hover:bg-muted/50 cursor-pointer",
+                  "flex items-center rounded-lg bg-zinc-50 mb-3 w-full transition-colors hover:bg-zinc-100 cursor-pointer",
                   collapsed ? "justify-center p-0 bg-transparent" : "gap-3 p-2"
                 )}
               >
-                <Avatar className="h-9 w-9 border border-border">
+                <Avatar className="h-9 w-9 border border-zinc-200">
                   <AvatarImage src={currentUser.avatar} />
                   <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 {!collapsed && (
                   <div className="flex-1 overflow-hidden text-left">
-                    <p className="text-sm font-medium truncate">{currentUser.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">
+                    <p className="text-sm font-medium text-zinc-900 truncate">{currentUser.name}</p>
+                    <p className="text-xs text-zinc-400 truncate">
                       {currentUser.isPremium ? "Membro Premium" : "Plano Gratuito"}
                     </p>
                   </div>
@@ -243,7 +238,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 size="sm"
                 onClick={handleSignOut}
                 className={cn(
-                  "text-xs text-muted-foreground hover:text-destructive w-full",
+                  "text-xs text-zinc-400 hover:text-destructive w-full",
                   collapsed ? "h-8 justify-center px-0" : "justify-start px-2 h-8"
                 )}
               >
@@ -258,7 +253,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-zinc-50/50 flex">
       {/* Desktop Sidebar */}
       <aside
         className={cn("hidden md:block shrink-0 h-screen sticky top-0 z-30 transition-all duration-300 py-4 pl-4 pr-2", isCollapsed ? "w-[86px]" : "w-[280px]")}
@@ -269,7 +264,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-1/2 -right-3 z-50 h-6 w-6 rounded-full border shadow-md bg-background hidden group-hover:flex"
+              className="absolute top-1/2 -right-3 z-50 h-6 w-6 rounded-full border border-zinc-200 shadow-md bg-white hidden group-hover:flex"
               onClick={(e) => {
                 e.stopPropagation();
                 setIsSidebarExpanded(false);
@@ -283,7 +278,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Sidebar */}
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent side="left" className="p-0 w-64 border-r border-border">
+        <SheetContent side="left" className="p-0 w-64 border-r border-zinc-200">
           <SidebarContent forceExpanded={true} />
         </SheetContent>
       </Sheet>
@@ -291,7 +286,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Mobile Header */}
-        <div className="md:hidden h-14 border-b flex items-center px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-20">
+        <div className="md:hidden h-14 border-b border-zinc-100 flex items-center px-4 bg-white/95 backdrop-blur-sm sticky top-0 z-20">
           <Button variant="ghost" size="icon" className="-ml-2" onClick={() => setIsMobileOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
@@ -299,21 +294,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Desktop Top Bar */}
-        <div className="hidden md:flex h-20 items-center px-8 border-b border-white/5 bg-background/40 backdrop-blur-3xl sticky top-0 z-20">
+        <div className="hidden md:flex h-20 items-center px-8 border-b border-zinc-100 bg-white/95 backdrop-blur-sm sticky top-0 z-20">
           <div className="w-full max-w-xl absolute left-1/2 -translate-x-1/2">
             <SearchTrigger className="w-full justify-start" />
           </div>
 
           <div className="flex items-center gap-2 ml-auto">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            >
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-
             <ChatDropdown />
             <NotificationDropdown />
 
@@ -322,7 +308,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 className="ml-2 cursor-pointer"
                 onClick={() => setLocation(getLinkWithCommunity('/profile'))}
               >
-                <Avatar className="h-9 w-9 border border-border hover:opacity-80 transition-opacity">
+                <Avatar className="h-9 w-9 border border-zinc-200 hover:opacity-80 transition-opacity">
                   <AvatarImage src={currentUser.avatar} />
                   <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>

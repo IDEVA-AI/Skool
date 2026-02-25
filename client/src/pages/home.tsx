@@ -155,9 +155,6 @@ export default function Home() {
         currentUserName={currentUser?.name || 'Usuário'}
         currentUserAvatar={currentUser?.avatar}
         onCommentAdd={handleCommentAdd}
-        onReactionChange={(postId, reactions) => {
-          // TODO: Implementar atualização de reações
-        }}
         onShare={(postId) => {
           // TODO: Implementar compartilhamento
         }}
@@ -183,7 +180,7 @@ export default function Home() {
       <div className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-heading font-semibold text-lg text-primary">Avisos</h3>
+            <h3 className="font-semibold text-lg text-zinc-900">Avisos</h3>
             {isAdmin && (
               <AnnouncementForm 
                 mode="create"
@@ -217,9 +214,9 @@ export default function Home() {
           )}
         </div>
 
-        <Card className="border-border/50 shadow-sm">
+        <Card className="border-zinc-200 shadow-sm">
           <CardHeader className="pb-3">
-            <h3 className="font-heading font-semibold text-lg">Seu Progresso</h3>
+            <h3 className="font-semibold text-lg">Seu Progresso</h3>
           </CardHeader>
           <CardContent>
             {enrolledCommunityCourses.length > 0 ? (

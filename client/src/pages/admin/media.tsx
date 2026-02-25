@@ -107,7 +107,7 @@ export default function AdminMedia() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-3xl font-heading font-bold text-foreground">Media Library</h1>
+        <h1 className="text-3xl font-bold text-foreground">Media Library</h1>
         <p className="text-muted-foreground mt-2">Gerencie arquivos de mídia para os cursos</p>
       </header>
 
@@ -132,7 +132,7 @@ export default function AdminMedia() {
           </div>
 
           {uploadFile ? (
-            <div className="border border-border rounded-md p-4 space-y-4">
+            <div className="border border-zinc-200 rounded-md p-4 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {getFileIcon(uploadFile.name)}
@@ -186,7 +186,7 @@ export default function AdminMedia() {
               </Button>
             </div>
           ) : (
-            <div className="border-2 border-dashed border-border rounded-md p-8 text-center">
+            <div className="border-2 border-dashed border-zinc-200 rounded-md p-8 text-center">
               <Input
                 type="file"
                 accept="video/*,application/pdf"
@@ -231,7 +231,7 @@ export default function AdminMedia() {
                 return (
                   <div
                     key={file.name}
-                    className="flex items-center justify-between p-4 border border-border rounded-md hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-4 border border-zinc-200 rounded-md hover:bg-muted/50 transition-colors"
                   >
                     <div className="flex items-center gap-4 flex-1 min-w-0">
                       {getFileIcon(file.name)}

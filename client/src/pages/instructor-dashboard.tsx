@@ -53,7 +53,7 @@ export default function InstructorDashboard() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-heading font-bold text-foreground">Dashboard do Instrutor</h1>
+        <h1 className="text-3xl font-bold text-foreground">Dashboard do Instrutor</h1>
         <p className="text-muted-foreground mt-2">Acompanhe o desempenho dos seus cursos</p>
       </header>
 

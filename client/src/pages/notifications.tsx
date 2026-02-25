@@ -68,8 +68,8 @@ export default function NotificationsPage() {
     }
 
     // Navegar para a referência
-    if (notification.reference_type === 'post') {
-      // Navegar para o post (será implementado quando tivermos a página de post)
+    if (notification.reference_type === 'post' && notification.reference_id) {
+      sessionStorage.setItem('openPostId', notification.reference_id);
       setLocation('/');
     } else if (notification.reference_type === 'course') {
       setLocation('/courses');
@@ -85,9 +85,9 @@ export default function NotificationsPage() {
       <header>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Bell className="h-8 w-8 text-primary" />
+            <Bell className="h-8 w-8 text-zinc-900" />
             <div>
-              <h1 className="text-3xl font-heading font-bold text-foreground">Notificações</h1>
+              <h1 className="text-3xl font-bold text-zinc-900">Notificações</h1>
               <p className="text-muted-foreground mt-2">
                 {unreadCount > 0
                   ? `${unreadCount} não ${unreadCount === 1 ? 'lida' : 'lidas'}`
@@ -153,11 +153,11 @@ export default function NotificationsPage() {
                     key={notif.id}
                     onClick={() => handleNotificationClick(notif)}
                     className={cn(
-                      "flex items-start gap-4 p-6 hover:bg-muted/50 transition-colors text-left",
-                      !notif.is_read && "bg-primary/5"
+                      "flex items-start gap-4 p-6 hover:bg-zinc-50 rounded-xl transition-colors text-left",
+                      !notif.is_read && "bg-orange-50/50"
                     )}
                   >
-                    <Avatar className="h-12 w-12 border border-border/50 shrink-0">
+                    <Avatar className="h-12 w-12 border border-zinc-200 shrink-0">
                       <AvatarFallback className="text-xl">
                         {getNotificationIcon(notif.type)}
                       </AvatarFallback>

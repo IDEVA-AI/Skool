@@ -137,7 +137,7 @@ export default function PurchasePage() {
             )}
 
             <div>
-              <h1 className="text-3xl font-heading font-bold mb-4">{pageTitle}</h1>
+              <h1 className="text-3xl font-bold mb-4">{pageTitle}</h1>
               {pageDescription && (
                 <p className="text-muted-foreground leading-relaxed">{pageDescription}</p>
               )}

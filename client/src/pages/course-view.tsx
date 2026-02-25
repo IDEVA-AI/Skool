@@ -73,7 +73,7 @@ export default function CourseView() {
   if (courseLoading || modulesLoading) {
     return (
       <div className="flex flex-col h-[calc(100vh-6rem)] -m-4 md:-m-8">
-        <div className="h-14 border-b border-border/40 bg-background flex items-center px-4 md:px-8 shrink-0 gap-4">
+        <div className="h-14 border-b border-zinc-100 bg-background flex items-center px-4 md:px-8 shrink-0 gap-4">
           <Skeleton className="h-8 w-24" />
           <Skeleton className="h-6 w-48" />
         </div>
@@ -149,7 +149,7 @@ export default function CourseView() {
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] -m-4 md:-m-8">
       {/* Top Bar */}
-      <div className="h-14 border-b border-border/40 bg-background flex items-center px-4 md:px-8 shrink-0 gap-4">
+      <div className="h-14 border-b border-zinc-100 bg-background flex items-center px-4 md:px-8 shrink-0 gap-4">
         <Link href="/courses">
           <Button variant="ghost" size="sm" className="gap-2">
             <ChevronLeft className="h-4 w-4" />
@@ -157,7 +157,7 @@ export default function CourseView() {
           </Button>
         </Link>
         <Separator orientation="vertical" className="h-6" />
-        <h1 className="font-heading font-semibold text-sm md:text-base truncate flex-1">
+        <h1 className="font-semibold text-sm md:text-base truncate flex-1">
           {course.title}
         </h1>
         <div className="text-xs text-muted-foreground hidden md:block">
@@ -167,8 +167,8 @@ export default function CourseView() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Modules List */}
-        <div className="w-80 border-r border-border/40 bg-background hidden lg:flex flex-col">
-          <div className="p-4 border-b border-border/40">
+        <div className="w-80 border-r border-zinc-100 bg-background hidden lg:flex flex-col">
+          <div className="p-4 border-b border-zinc-100">
             <h3 className="font-semibold">Conteúdo do Curso</h3>
           </div>
           <ScrollArea className="flex-1">
@@ -281,7 +281,7 @@ export default function CourseView() {
           <div className="p-6 md:p-8 max-w-4xl mx-auto w-full">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-2xl font-heading font-bold mb-2">{selectedLesson.title}</h2>
+                    <h2 className="text-2xl font-bold mb-2">{selectedLesson.title}</h2>
                     {selectedModule && (
                       <p className="text-muted-foreground">{selectedModule.title}</p>
                     )}
@@ -313,7 +313,7 @@ export default function CourseView() {
                 </div>
 
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="bg-transparent border-b border-border/40 w-full justify-start h-auto p-0 rounded-none gap-6">
+              <TabsList className="bg-transparent border-b border-zinc-100 w-full justify-start h-auto p-0 rounded-none gap-6">
                     <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 py-3">
                       Visão Geral
                     </TabsTrigger>
@@ -324,7 +324,7 @@ export default function CourseView() {
               
                   <TabsContent value="overview" className="mt-6 space-y-6">
                 <div>
-                      <h3 className="text-xl font-heading font-bold mb-4">Sobre esta aula</h3>
+                      <h3 className="text-xl font-bold mb-4">Sobre esta aula</h3>
                   <p className="text-muted-foreground leading-relaxed">
                         {selectedLesson.content_type === 'video' 
                           ? 'Assista ao vídeo acima para aprender o conteúdo desta aula.'
@@ -336,8 +336,8 @@ export default function CourseView() {
               <TabsContent value="resources" className="mt-6">
                 <div className="space-y-3">
                       {selectedLesson.content_url && selectedLesson.content_type === 'pdf' && (
-                        <div className="flex items-center gap-3 p-3 rounded-md border border-border/50 hover:bg-muted/30 transition-colors">
-                          <div className="h-10 w-10 rounded bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 flex items-center justify-center">
+                        <div className="flex items-center gap-3 p-3 rounded-md border border-zinc-200 hover:bg-muted/30 transition-colors">
+                          <div className="h-10 w-10 rounded bg-red-100 text-red-600 flex items-center justify-center">
                       <FileText className="h-5 w-5" />
                     </div>
                     <div className="flex-1">

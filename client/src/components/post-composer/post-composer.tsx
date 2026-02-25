@@ -178,7 +178,7 @@ export function PostComposer({
   };
 
   return (
-    <Card className={cn('border-border/50 shadow-sm overflow-hidden transition-all duration-300', className)}>
+    <Card className={cn('border-zinc-200 shadow-sm overflow-hidden transition-all duration-300', className)}>
       <CardContent className="pt-6 pb-4 px-6 space-y-4">
         {/* Header */}
         <ComposerHeader

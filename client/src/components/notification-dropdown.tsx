@@ -69,13 +69,13 @@ export function NotificationDropdown() {
     }
 
     // Navegar para a referência
-    if (notification.reference_type === 'post') {
-      // Navegar para o post (será implementado quando tivermos a página de post)
-      // Por enquanto, apenas fecha o dropdown
+    if (notification.reference_type === 'post' && notification.reference_id) {
+      sessionStorage.setItem('openPostId', notification.reference_id);
+      setLocation('/');
     } else if (notification.reference_type === 'course') {
-      setLocation(`/courses`);
+      setLocation('/courses');
     } else if (notification.reference_type === 'community') {
-      setLocation(`/`);
+      setLocation('/');
     }
   };
 
@@ -96,8 +96,8 @@ export function NotificationDropdown() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[380px] p-0" align="end">
-        <div className="p-4 pb-2 flex items-center justify-between border-b border-border/40 mb-1">
-          <h3 className="font-heading font-bold text-lg">Notificações</h3>
+        <div className="p-4 pb-2 flex items-center justify-between border-b border-zinc-100 mb-1">
+          <h3 className="font-bold text-lg">Notificações</h3>
           <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
             <button
               onClick={handleMarkAllRead}
@@ -129,12 +129,12 @@ export function NotificationDropdown() {
                     key={notif.id}
                     onClick={() => handleNotificationClick(notif)}
                     className={cn(
-                      "flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-border/40 last:border-none",
+                      "flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-zinc-100 last:border-none",
                       !notif.is_read && "bg-primary/5"
                     )}
                   >
                     <div className="relative shrink-0">
-                      <Avatar className="h-10 w-10 border border-border/50">
+                      <Avatar className="h-10 w-10 border border-zinc-200">
                         <AvatarFallback className="text-lg">
                           {getNotificationIcon(notif.type)}
                         </AvatarFallback>
@@ -164,7 +164,7 @@ export function NotificationDropdown() {
           </div>
         </ScrollArea>
 
-        <div className="p-2 border-t border-border/40 text-center">
+        <div className="p-2 border-t border-zinc-100 text-center">
           <Button
             variant="ghost"
             size="sm"

@@ -11,7 +11,7 @@ export default function AdminModules() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-3xl font-heading font-bold text-foreground">Módulos e Aulas</h1>
+        <h1 className="text-3xl font-bold text-foreground">Módulos e Aulas</h1>
         <p className="text-muted-foreground mt-2">
           Gerencie módulos e aulas dos seus cursos
         </p>

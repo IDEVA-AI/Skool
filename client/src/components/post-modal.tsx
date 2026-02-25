@@ -64,7 +64,7 @@ export function PostModal({ post, isOpen, onClose }: PostModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-background/95 backdrop-blur-xl border-border/40 shadow-2xl">
+      <DialogContent className="max-w-3xl h-[85vh] p-0 gap-0 overflow-hidden flex flex-col bg-white/95 backdrop-blur-xl border-zinc-100 shadow-2xl">
         <VisuallyHidden>
           <DialogTitle>{post.title}</DialogTitle>
         </VisuallyHidden>
@@ -107,14 +107,14 @@ export function PostModal({ post, isOpen, onClose }: PostModalProps) {
               </div>
               
               <div 
-                className="prose prose-sm dark:prose-invert max-w-none text-foreground/90 leading-relaxed [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
+                className="prose prose-sm max-w-none text-foreground/90 leading-relaxed [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_a]:text-primary [&_a]:underline [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
             </div>
 
             {/* Interaction Bar */}
-            <div className="flex items-center gap-4 pt-4 border-b border-border/40 pb-4">
-              <Button variant="outline" size="sm" className="gap-2 h-8 rounded-md px-3 font-medium text-xs border-border/60">
+            <div className="flex items-center gap-4 pt-4 border-b border-zinc-100 pb-4">
+              <Button variant="outline" size="sm" className="gap-2 h-8 rounded-md px-3 font-medium text-xs border-zinc-200/60">
                 <ThumbsUp className="h-3.5 w-3.5" />
                 Curtir
                 <span className="bg-muted px-1.5 py-0.5 rounded text-[10px] ml-1">0</span>
@@ -139,7 +139,7 @@ export function PostModal({ post, isOpen, onClose }: PostModalProps) {
                   
                   return (
                     <div key={comment.id} className="flex gap-3">
-                      <Avatar className="h-8 w-8 border border-border/50">
+                      <Avatar className="h-8 w-8 border border-zinc-200">
                         <AvatarImage src={getAvatarUrl(commentUser.avatar_url, commentUser.name || commentUser.email) || undefined} />
                         <AvatarFallback>{(commentUser.name || commentUser.email || 'U')[0]?.toUpperCase()}</AvatarFallback>
                       </Avatar>
@@ -171,16 +171,16 @@ export function PostModal({ post, isOpen, onClose }: PostModalProps) {
 
         {/* Comment Input Footer */}
         {currentUser && (
-          <div className="p-4 bg-background border-t border-border z-10">
+          <div className="p-4 bg-background border-t border-zinc-200 z-10">
             <div className="flex gap-3">
-              <Avatar className="h-9 w-9 border border-border/50 shrink-0">
+              <Avatar className="h-9 w-9 border border-zinc-200 shrink-0">
                 <AvatarImage src={currentUser.avatar} />
                 <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
               <div className="flex-1 space-y-2">
                 <div className="relative">
                   <Textarea
-                    className="w-full bg-muted/50 rounded-xl pl-4 pr-24 py-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none min-h-[52px] max-h-32 text-foreground placeholder:text-muted-foreground border border-border/50 shadow-sm"
+                    className="w-full bg-muted/50 rounded-xl pl-4 pr-24 py-4 text-sm focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none min-h-[52px] max-h-32 text-foreground placeholder:text-muted-foreground border border-zinc-200 shadow-sm"
                     placeholder="Escreva um comentário..."
                     rows={1}
                     value={commentContent}

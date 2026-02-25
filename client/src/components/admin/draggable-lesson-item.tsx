@@ -40,7 +40,7 @@ export function DraggableLessonItem({
   return (
     <Card
       ref={setNodeRef}
-      className={cn('border-border/50', isDragging && 'bg-muted/50')}
+      className={cn('border-zinc-200', isDragging && 'bg-muted/50')}
       style={style}
     >
       <CardContent className="p-4">

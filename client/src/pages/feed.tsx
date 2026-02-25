@@ -1,31 +1,14 @@
-import { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { TipTapEditor } from '@/components/tiptap-editor';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Progress } from '@/components/ui/progress';
-import {
-  ThumbsUp,
-  MessageSquare,
-  Pin,
-  Paperclip,
-  Link as LinkIcon,
-  Youtube,
-  BarChart2,
-  Smile,
-  Loader2,
-  Plus
-} from 'lucide-react';
+import { Pin, Plus, Loader2, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PostModal } from '@/components/post-modal';
-import { useAllPosts, useCreatePost } from '@/hooks/use-posts';
+import { useAllPosts, useFollowingPosts, useCreatePost } from '@/hooks/use-posts';
 import { useCourses, useEnrollments, useGetOrCreateDefaultCourse } from '@/hooks/use-courses';
+import { useFeedRealtime } from '@/hooks/use-feed-realtime';
 import { useAuth } from '@/hooks/use-auth';
 import { useToast } from '@/hooks/use-toast';
 import { useAnnouncements } from '@/hooks/use-announcements';
-import { useCourseProgress } from '@/hooks/use-course-content';
 import { useIsAdmin } from '@/hooks/use-user-role';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -33,8 +16,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AnnouncementForm } from '@/components/announcement-form';
 import { AnnouncementBanner } from '@/components/announcement-banner';
 import { useSelectedCommunity } from '@/contexts/community-context';
+import { PostComposerSimple } from '@/components/social/post-composer-simple';
+import { PostComponent } from '@/components/social/post';
+import { useSocialContextSafe } from '@/components/social/social-context';
+import { useUserRole } from '@/hooks/use-user-role';
+import { can } from '@/lib/permissions';
+import { toSocialPost } from '@/lib/post-mappers';
 
-// Função para verificar se há texto real no conteúdo HTML
 function hasTextContent(html: string): boolean {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = html;
@@ -45,7 +33,7 @@ function hasTextContent(html: string): boolean {
 export default function Feed() {
   const { user } = useAuth();
   const { selectedCommunity } = useSelectedCommunity();
-  const { data: allPosts, isLoading: postsLoading } = useAllPosts();
+  const { data: allPosts, isLoading: postsLoading, refetch: refetchPosts } = useAllPosts();
   const { data: announcements } = useAnnouncements();
   const { data: allCourses } = useCourses();
   const { data: enrolledCourseIds = [] } = useEnrollments();
@@ -53,30 +41,29 @@ export default function Feed() {
   const getOrCreateDefaultCourse = useGetOrCreateDefaultCourse();
   const { toast } = useToast();
   const isAdmin = useIsAdmin();
-  const { data: courseProgress } = useCourseProgress();
+  const { data: userRole } = useUserRole();
+  const socialContext = useSocialContextSafe();
 
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
+  const [feedTab, setFeedTab] = useState<'all' | 'following'>('all');
+  const { data: followingPosts } = useFollowingPosts();
 
-  // Filtrar cursos da comunidade atual
   const communityCourses = useMemo(() => {
     if (!allCourses || !selectedCommunity) return [];
     return allCourses.filter(c => c.community_id === selectedCommunity.id);
   }, [allCourses, selectedCommunity]);
 
-  // Filtrar posts da comunidade atual (através dos cursos)
   const posts = useMemo(() => {
     if (!allPosts || !communityCourses.length) return [];
     const communityCourseIds = communityCourses.map(c => c.id);
     return allPosts.filter((post: any) => communityCourseIds.includes(post.course_id));
   }, [allPosts, communityCourses]);
 
-  // Cursos da comunidade em que o usuário está inscrito
   const enrolledCommunityCourses = useMemo(() => {
     return communityCourses.filter(c => enrolledCourseIds.includes(c.id));
   }, [communityCourses, enrolledCourseIds]);
 
-  // Primeiro curso da comunidade para usar como padrão ao criar post
   const defaultCourse = useMemo(() => {
     return enrolledCommunityCourses.length > 0
       ? enrolledCommunityCourses[0]
@@ -85,29 +72,42 @@ export default function Feed() {
         : null;
   }, [enrolledCommunityCourses, communityCourses]);
 
-  // Ordenar posts: pinned primeiro, depois por data
   const sortedPosts = useMemo(() => {
-    return [...posts].sort((a, b) => {
+    const basePosts = feedTab === 'following'
+      ? (followingPosts || []).filter((p: any) => {
+          const communityCourseIds = communityCourses.map(c => c.id);
+          return communityCourseIds.includes(p.course_id);
+        })
+      : posts;
+
+    return [...basePosts].sort((a, b) => {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       const dateA = new Date(a.created_at);
       const dateB = new Date(b.created_at);
       return dateB.getTime() - dateA.getTime();
     });
-  }, [posts]);
+  }, [posts, followingPosts, feedTab, communityCourses]);
+
+  const canCreate = socialContext?.permissions.canCreate ?? can(user, userRole || null, 'create');
+
+  const currentUser = socialContext?.currentUser ?? (user ? {
+    id: user.id,
+    name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+    avatar: user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.name || user.email || 'U')}`,
+  } : null);
 
   const handleCreatePost = async (title: string, content: string) => {
     if (!user || !defaultCourse) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível criar o post. Verifique se você está inscrito em algum curso.',
+        description: 'Nao foi possivel criar o post. Verifique se voce esta inscrito em algum curso.',
         variant: 'destructive',
       });
       return;
     }
 
     try {
-      // Tentar obter ou criar curso padrão
       const course = await getOrCreateDefaultCourse.mutateAsync({
         communityId: selectedCommunity?.id || 0,
       });
@@ -125,150 +125,179 @@ export default function Feed() {
     } catch (error: any) {
       toast({
         title: 'Erro ao criar post',
-        description: error.message || 'Não foi possível criar o post.',
+        description: error.message || 'Nao foi possivel criar o post.',
         variant: 'destructive',
       });
     }
   };
 
+  // Real-time feed: listen for new posts
+  const communityCourseIds = useMemo(() => communityCourses.map(c => c.id), [communityCourses]);
+  const { hasNewPosts, newPostCount, dismissNewPosts } = useFeedRealtime({
+    courseIds: communityCourseIds,
+    enabled: communityCourseIds.length > 0,
+  });
+
+  const handleShowNewPosts = useCallback(() => {
+    dismissNewPosts();
+    refetchPosts();
+  }, [dismissNewPosts, refetchPosts]);
+
+  // Deep-link from notifications: open a specific post
+  useEffect(() => {
+    const openPostId = sessionStorage.getItem('openPostId');
+    if (openPostId && allPosts) {
+      sessionStorage.removeItem('openPostId');
+      const postIdNum = parseInt(openPostId);
+      const post = allPosts.find((p: any) => p.id === postIdNum);
+      if (post) {
+        setSelectedPost(post);
+      }
+    }
+  }, [allPosts]);
+
   if (postsLoading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} className="border-border/50">
-            <CardContent className="p-6 space-y-4">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 rounded-full" />
-                <div className="space-y-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-16" />
+      <div className="feed-grain">
+        <div className="max-w-2xl mx-auto space-y-1">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="py-8 px-6 border-b border-zinc-100" style={{ animationDelay: `${i * 100}ms` }}>
+              <div className="flex items-center gap-3 mb-5">
+                <Skeleton className="h-9 w-9 rounded-full" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3.5 w-20 rounded" />
+                  <Skeleton className="h-2.5 w-14 rounded" />
                 </div>
               </div>
-              <Skeleton className="h-5 w-3/4" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-2/3" />
-            </CardContent>
-          </Card>
-        ))}
+              <Skeleton className="h-6 w-3/4 mb-3 rounded" />
+              <Skeleton className="h-4 w-full mb-2 rounded" />
+              <Skeleton className="h-4 w-2/3 rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Avisos */}
-      {isAdmin && announcements && announcements.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-heading font-black tracking-tight drop-shadow-sm">Avisos</h2>
+    <div className="feed-grain">
+      <div className="max-w-2xl mx-auto">
+        {/* Announcements */}
+        {isAdmin && announcements && announcements.length > 0 && (
+          <div className="mb-8 space-y-4">
+            <div className="flex items-center justify-between px-2">
+              <span className="text-[11px] font-medium tracking-[0.15em] uppercase text-muted-foreground/60">
+                Avisos
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1.5"
+                onClick={() => setShowAnnouncementForm(true)}
+              >
+                <Plus className="h-3 w-3" />
+                Novo
+              </Button>
+            </div>
+            {announcements
+              .filter((a: any) => a && a.id)
+              .map((announcement: any) => (
+                <AnnouncementBanner
+                  key={announcement.id}
+                  announcement={announcement}
+                  isAdmin={isAdmin}
+                />
+              ))}
+          </div>
+        )}
+
+        {/* Post Composer */}
+        {canCreate && currentUser && (
+          <div className="mb-2">
+            <PostComposerSimple
+              avatar={currentUser.avatar}
+              name={currentUser.name}
+              onPublish={handleCreatePost}
+              isPublishing={createPostMutation.isPending}
+            />
+          </div>
+        )}
+
+        {/* New posts banner */}
+        {hasNewPosts && (
+          <div className="px-2 py-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowAnnouncementForm(true)}
+              onClick={handleShowNewPosts}
+              className="w-full h-9 gap-2 text-xs font-medium text-primary border-primary/30 hover:bg-primary/5"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Novo Aviso
+              <RefreshCw className="h-3.5 w-3.5" />
+              {newPostCount} {newPostCount === 1 ? 'nova publicacao' : 'novas publicacoes'} — clique para ver
             </Button>
           </div>
-          {announcements
-            .filter((announcement: any) => announcement && announcement.id)
-            .map((announcement: any) => (
-              <AnnouncementBanner
-                key={announcement.id}
-                announcement={announcement}
-                isAdmin={isAdmin}
-              />
-            ))}
+        )}
+
+        {/* Feed tabs */}
+        <div className="flex items-center gap-1 px-2 pt-4 pb-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFeedTab('all')}
+            className={cn(
+              'h-7 px-3 text-xs font-medium rounded-full',
+              feedTab === 'all'
+                ? 'bg-foreground text-background hover:bg-foreground/90'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Para todos
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setFeedTab('following')}
+            className={cn(
+              'h-7 px-3 text-xs font-medium rounded-full',
+              feedTab === 'following'
+                ? 'bg-foreground text-background hover:bg-foreground/90'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            Seguindo
+          </Button>
+          <div className="flex-1 h-px bg-border/30 ml-2" />
         </div>
-      )}
 
-      {/* Posts */}
-      <div className="space-y-4">
+        {/* Posts */}
         {sortedPosts.length > 0 ? (
-          sortedPosts.map((post: any) => {
-            const postUser = post.users || {};
-            const course = post.courses || {};
-            const postDate = new Date(post.created_at);
-
-            return (
-              <Card
+          <div className="divide-y divide-border/30">
+            {sortedPosts.map((post: any, index: number) => (
+              <div
                 key={post.id}
-                className="glass-card shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-white/20 transition-all duration-300 cursor-pointer"
-                onClick={() => setSelectedPost(post)}
+                className="feed-item-animate"
+                style={{ animationDelay: `${Math.min(index * 60, 300)}ms` }}
               >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10 border-2 border-background">
-                        <AvatarImage src={postUser.avatar_url} />
-                        <AvatarFallback>
-                          {(postUser.name || postUser.email || 'U')[0]?.toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-heading font-bold tracking-tight text-sm">{postUser.name || postUser.email?.split('@')[0] || 'Usuário'}</span>
-                          {post.pinned && (
-                            <Pin className="h-3.5 w-3.5 text-primary fill-current" />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <span>{formatDistanceToNow(postDate, { addSuffix: true, locale: ptBR })}</span>
-                          {course.title && (
-                            <>
-                              <span>•</span>
-                              <span>{course.title}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="space-y-3">
-                  {post.title && (
-                    <h3 className="text-xl font-heading font-bold tracking-tight leading-tight">{post.title}</h3>
-                  )}
-                  {hasTextContent(post.content) && (
-                    <div
-                      className="text-sm leading-relaxed text-foreground/90 prose prose-sm dark:prose-invert max-w-none [&_strong]:font-bold [&_em]:italic [&_u]:underline [&_a]:text-primary [&_a]:underline"
-                      dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
-                  )}
-                </CardContent>
-
-                <CardFooter className="pt-3 pb-4 flex items-center justify-between bg-transparent border-t border-white/5">
-                  <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="sm" className="gap-2 h-8">
-                      <ThumbsUp className="h-4 w-4" />
-                      <span className="text-sm">0</span>
-                    </Button>
-                    <Button variant="ghost" size="sm" className="gap-2 h-8">
-                      <MessageSquare className="h-4 w-4" />
-                      <span className="text-sm">{post.comment_count || 0}</span>
-                    </Button>
-                  </div>
-                  {courseProgress && courseProgress.length > 0 && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <BarChart2 className="h-3 w-3" />
-                      <span>Progresso do curso</span>
-                    </div>
-                  )}
-                </CardFooter>
-              </Card>
-            );
-          })
+                <PostComponent
+                  post={toSocialPost(post, post.reactions)}
+                  onPostClick={() => setSelectedPost(post)}
+                />
+              </div>
+            ))}
+          </div>
         ) : (
-          <Card className="border-border/50 border-dashed">
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">Nenhum post ainda. Seja o primeiro a compartilhar!</p>
-            </CardContent>
-          </Card>
+          <div className="py-24 text-center feed-item-animate">
+            <p className="text-2xl font-semibold text-zinc-400 mb-2">
+              Nenhuma publicacao ainda
+            </p>
+            <p className="text-sm text-zinc-400">
+              Seja o primeiro a compartilhar algo com a comunidade.
+            </p>
+          </div>
         )}
       </div>
 
-      {/* Modal de Post */}
+      {/* Post Modal */}
       {selectedPost && (
         <PostModal
           post={selectedPost}
@@ -277,7 +306,7 @@ export default function Feed() {
         />
       )}
 
-      {/* Modal de Aviso */}
+      {/* Announcement Modal */}
       {showAnnouncementForm && (
         <AnnouncementForm
           isOpen={showAnnouncementForm}
@@ -287,4 +316,3 @@ export default function Feed() {
     </div>
   );
 }
-

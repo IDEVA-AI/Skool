@@ -1,10 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Pin, Shield } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Post } from '@/types/social';
 import { cn } from '@/lib/utils';
+import { useLocation } from 'wouter';
+import { useSelectedCommunity } from '@/contexts/community-context';
 
 interface PostHeaderProps {
   post: Post;
@@ -12,6 +13,15 @@ interface PostHeaderProps {
 }
 
 export function PostHeader({ post, className }: PostHeaderProps) {
+  const [, setLocation] = useLocation();
+  const { communitySlug } = useSelectedCommunity();
+
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const basePath = communitySlug ? `/c/${communitySlug}` : '';
+    setLocation(`${basePath}/members/${post.authorId}`);
+  };
+
   const initials = post.authorName
     .split(' ')
     .map((n) => n[0])
@@ -23,42 +33,55 @@ export function PostHeader({ post, className }: PostHeaderProps) {
   const isAdmin = role === 'admin';
 
   return (
-    <div className={cn('flex items-start gap-3', className)}>
-      <Avatar className={cn(
-        "h-10 w-10 shrink-0 ring-2 ring-offset-2 ring-offset-background transition-all",
-        isAdmin ? "ring-primary" : "ring-border/50"
-      )}>
+    <div className={cn('flex items-center gap-3', className)}>
+      <Avatar
+        className={cn(
+          'h-9 w-9 shrink-0 transition-all cursor-pointer hover:opacity-80',
+          isAdmin
+            ? 'ring-[1.5px] ring-offset-2 ring-offset-background ring-foreground/30'
+            : ''
+        )}
+        onClick={handleAuthorClick}
+      >
         <AvatarImage src={post.authorAvatar} alt={post.authorName} />
-        <AvatarFallback className={isAdmin ? "bg-primary/10 text-primary" : ""}>
+        <AvatarFallback className="text-xs font-medium bg-muted text-muted-foreground">
           {initials}
         </AvatarFallback>
       </Avatar>
-      
+
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-bold text-foreground text-sm">{post.authorName}</span>
-          
-          {/* Admin Icon - apenas para administradores */}
+        <div className="flex items-center gap-2">
+          <span
+            className="text-[13px] font-semibold text-foreground tracking-[-0.01em] cursor-pointer hover:underline"
+            onClick={handleAuthorClick}
+          >
+            {post.authorName}
+          </span>
+
           {isAdmin && (
-            <span title="Administrador">
-              <Shield className="h-3.5 w-3.5 text-primary" />
-            </span>
+            <Shield className="h-3 w-3 text-muted-foreground/60" />
           )}
 
-          {/* Pin Indicator */}
           {post.pinned && (
-            <Badge variant="outline" className="text-xs border-blue-500/50 text-blue-600 dark:text-blue-400">
-              <Pin className="h-3 w-3 mr-1 fill-current" />
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium tracking-wider uppercase text-muted-foreground/50">
+              <Pin className="h-2.5 w-2.5 fill-current" />
               Fixado
-            </Badge>
+            </span>
           )}
         </div>
-        
-        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-          <span>{formatDistanceToNow(post.createdAt, { addSuffix: true, locale: ptBR })}</span>
+
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <time className="text-[11px] text-zinc-400">
+            {formatDistanceToNow(post.createdAt, { addSuffix: true, locale: ptBR })}
+          </time>
+          {post.category && (
+            <>
+              <span className="text-[11px] text-zinc-300">/</span>
+              <span className="text-[11px] text-zinc-400">{post.category}</span>
+            </>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

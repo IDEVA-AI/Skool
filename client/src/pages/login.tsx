@@ -47,10 +47,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-50">
+      <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-zinc-200">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading font-bold">Entrar</CardTitle>
+          <CardTitle className="text-2xl font-bold">Entrar</CardTitle>
           <CardDescription>
             Entre com sua conta para continuar
           </CardDescription>
@@ -94,7 +94,7 @@ export default function Login() {
           <div className="mt-4 text-center text-sm">
             <button
               onClick={() => setLocation('/register')}
-              className="text-primary hover:underline"
+              className="text-orange-500 hover:text-orange-600 hover:underline"
             >
               Não tem conta? Registre-se
             </button>

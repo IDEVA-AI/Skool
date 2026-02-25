@@ -60,7 +60,7 @@ export function ChatDropdown() {
       <PopoverContent className="w-[380px] p-0" align="end">
         <div className="p-4 pb-2">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-heading font-bold text-lg">Conversas</h3>
+            <h3 className="font-bold text-lg">Conversas</h3>
           </div>
           
           <div className="relative">
@@ -111,10 +111,10 @@ export function ChatDropdown() {
                   <button
                     key={conv.id}
                     onClick={() => handleConversationClick(conv.id)}
-                    className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-border/40 last:border-none"
+                    className="flex items-start gap-3 p-4 hover:bg-muted/50 transition-colors text-left border-b border-zinc-100 last:border-none"
                   >
                     <div className="relative shrink-0">
-                      <Avatar className="h-10 w-10 border border-border/50 shrink-0">
+                      <Avatar className="h-10 w-10 border border-zinc-200 shrink-0">
                         <AvatarImage
                           src={getAvatarUrl(displayAvatar, displayName) || undefined}
                         />
@@ -154,7 +154,7 @@ export function ChatDropdown() {
           </div>
         </ScrollArea>
 
-        <div className="p-2 border-t border-border/40 text-center">
+        <div className="p-2 border-t border-zinc-100 text-center">
           <Button
             variant="ghost"
             size="sm"

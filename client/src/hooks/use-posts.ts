@@ -9,6 +9,14 @@ export function useAllPosts() {
   });
 }
 
+// Buscar posts de usuários que o usuário segue
+export function useFollowingPosts() {
+  return useQuery({
+    queryKey: ['following-posts'],
+    queryFn: () => postsService.getFollowingPosts(),
+  });
+}
+
 export function useCreatePost() {
   const queryClient = useQueryClient();
 

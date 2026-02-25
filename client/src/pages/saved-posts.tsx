@@ -56,7 +56,7 @@ export default function SavedPosts() {
         <div className="flex items-center gap-3">
           <BookmarkCheck className="h-8 w-8 text-primary" />
           <div>
-            <h1 className="text-3xl font-heading font-bold text-foreground">Posts Salvos</h1>
+            <h1 className="text-3xl font-bold text-foreground">Posts Salvos</h1>
             <p className="text-muted-foreground mt-2">
               Suas postagens favoritas em um só lugar
             </p>

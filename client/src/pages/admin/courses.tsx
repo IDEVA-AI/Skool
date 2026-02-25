@@ -129,7 +129,7 @@ export default function AdminCourses() {
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-heading font-bold text-foreground">Gerenciar Cursos</h1>
+          <h1 className="text-3xl font-bold text-foreground">Gerenciar Cursos</h1>
           <p className="text-muted-foreground mt-2">Crie, edite e gerencie os cursos da plataforma</p>
         </div>
         <Button onClick={() => {

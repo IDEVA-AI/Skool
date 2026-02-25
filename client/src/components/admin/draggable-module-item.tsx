@@ -48,7 +48,7 @@ export function DraggableModuleItem({
     <AccordionItem
       ref={setNodeRef}
       value={module.id.toString()}
-      className={cn('border-border/50', isDragging && 'bg-muted/50')}
+      className={cn('border-zinc-200', isDragging && 'bg-muted/50')}
       style={style}
     >
       <AccordionTrigger className="hover:no-underline">

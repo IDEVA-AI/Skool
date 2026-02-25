@@ -71,7 +71,7 @@ export function ConversationList({ selectedConversationId, onConversationSelect 
               )}
             >
               <div className="relative shrink-0">
-                <Avatar className="h-12 w-12 border border-border/50">
+                <Avatar className="h-12 w-12 border border-zinc-200">
                   <AvatarImage
                     src={getAvatarUrl(displayAvatar, displayName) || undefined}
                   />

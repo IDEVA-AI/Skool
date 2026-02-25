@@ -45,7 +45,7 @@ export default function ChatDetailPage() {
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
       {/* Header da conversa */}
-      <div className="flex items-center gap-3 p-4 border-b border-border bg-muted/30">
+      <div className="flex items-center gap-3 p-4 border-b border-zinc-100 bg-zinc-50">
         <Button
           variant="ghost"
           size="icon"
@@ -54,7 +54,7 @@ export default function ChatDetailPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <Avatar className="h-10 w-10 border border-border/50">
+        <Avatar className="h-10 w-10 border border-zinc-200">
           <AvatarImage
             src={getAvatarUrl(displayAvatar, displayName) || undefined}
           />

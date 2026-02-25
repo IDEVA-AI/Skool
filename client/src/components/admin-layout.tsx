@@ -2,17 +2,18 @@ import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { 
-  BookOpen, 
+import {
+  BookOpen,
   FileVideo,
-  Settings, 
+  Settings,
   Home,
   ChevronRight,
   Menu,
   LogOut,
   Users as UsersIcon,
   ShoppingCart,
-  Unlock
+  Unlock,
+  Flag
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
@@ -36,6 +37,7 @@ const adminNavigation = [
   { name: "Media Library", href: "/admin/media", icon: FileVideo },
   { name: "Integrações", href: "/admin/integrations", icon: ShoppingCart },
   { name: "Páginas de Desbloqueio", href: "/admin/unlock-pages", icon: Unlock },
+  { name: "Moderação", href: "/admin/moderation", icon: Flag },
   { name: "Configurações", href: "/admin/settings", icon: Settings },
 ];
 
@@ -94,18 +96,18 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
   } : null;
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-zinc-50/50 flex">
       {/* Desktop Sidebar */}
-      <aside className="hidden md:block w-64 shrink-0 h-screen sticky top-0 z-30 border-r border-border/40 bg-card">
+      <aside className="hidden md:block w-64 shrink-0 h-screen sticky top-0 z-30 border-r border-zinc-200 bg-white">
         <div className="h-full flex flex-col">
           {/* Logo/Header */}
-          <div className="h-16 border-b border-border/40 flex items-center px-6">
+          <div className="h-16 border-b border-zinc-100 flex items-center px-6">
             <Link href="/admin">
               <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold">
+                <div className="h-8 w-8 rounded-lg bg-zinc-900 text-white flex items-center justify-center font-bold">
                   A
                 </div>
-                <span className="font-heading font-bold text-lg">Admin Panel</span>
+                <span className="font-semibold text-lg text-zinc-900">Admin Panel</span>
               </div>
             </Link>
           </div>
@@ -125,16 +127,16 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                   <Link key={item.name} href={item.href}>
                     <a
                       className={cn(
-                        "flex items-center gap-3 rounded-md text-sm font-medium transition-all duration-200 px-3 py-2.5",
+                        "flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-200 px-3 py-2.5",
                         isActive
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          ? "bg-zinc-100 text-zinc-900"
+                          : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
                       )}
                       onClick={() => setIsMobileOpen(false)}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")} />
                       <span>{item.name}</span>
-                      {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                      {isActive && <ChevronRight className="h-4 w-4 ml-auto text-zinc-400" />}
                     </a>
                   </Link>
                 );
@@ -143,28 +145,28 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
           </ScrollArea>
 
           {/* User Section */}
-          <div className="border-t border-border/40 p-4">
+          <div className="border-t border-zinc-100 p-4">
             {currentUser && (
               <>
-                <div className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 mb-3">
-                  <Avatar className="h-9 w-9 border border-border">
+                <div className="flex items-center gap-3 p-2 rounded-lg bg-zinc-50 mb-3">
+                  <Avatar className="h-9 w-9 border border-zinc-200">
                     <AvatarImage src={currentUser.avatar} />
                     <AvatarFallback>{currentUser.name[0]?.toUpperCase() || 'A'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 overflow-hidden">
-                    <p className="text-sm font-medium truncate">{currentUser.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">Administrador</p>
+                    <p className="text-sm font-medium text-zinc-900 truncate">{currentUser.name}</p>
+                    <p className="text-xs text-zinc-400 truncate">Administrador</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <Button variant="outline" size="sm" className="text-xs" asChild>
                     <Link href="/">Voltar ao Site</Link>
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={handleSignOut}
-                    className="text-xs text-muted-foreground hover:text-destructive"
+                    className="text-xs text-zinc-400 hover:text-destructive"
                   >
                     <LogOut className="h-3 w-3 mr-1" />
                     Sair
@@ -178,10 +180,10 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Sidebar */}
       <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
-        <SheetContent side="left" className="p-0 w-64 border-r border-border">
+        <SheetContent side="left" className="p-0 w-64 border-r border-zinc-200">
           <div className="h-full flex flex-col">
-            <div className="h-16 border-b border-border/40 flex items-center px-6">
-              <span className="font-heading font-bold text-lg">Admin Panel</span>
+            <div className="h-16 border-b border-zinc-100 flex items-center px-6">
+              <span className="font-semibold text-lg text-zinc-900">Admin Panel</span>
             </div>
             <div className="pt-4">
               <CommunityPicker />
@@ -195,14 +197,14 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
                     <Link key={item.name} href={item.href}>
                       <a
                         className={cn(
-                          "flex items-center gap-3 rounded-md text-sm font-medium transition-all duration-200 px-3 py-2.5",
+                          "flex items-center gap-3 rounded-lg text-sm font-medium transition-all duration-200 px-3 py-2.5",
                           isActive
-                            ? "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            ? "bg-zinc-100 text-zinc-900"
+                            : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50"
                         )}
                         onClick={() => setIsMobileOpen(false)}
                       >
-                        <Icon className="h-4 w-4 shrink-0" />
+                        <Icon className={cn("h-4 w-4 shrink-0", isActive ? "text-zinc-900" : "text-zinc-400")} />
                         <span>{item.name}</span>
                       </a>
                     </Link>
@@ -217,7 +219,7 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 min-h-screen">
         {/* Mobile Header */}
-        <div className="md:hidden h-14 border-b flex items-center px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-20">
+        <div className="md:hidden h-14 border-b border-zinc-100 flex items-center px-4 bg-white/95 backdrop-blur-sm sticky top-0 z-20">
           <Button variant="ghost" size="icon" className="-ml-2" onClick={() => setIsMobileOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
@@ -225,9 +227,9 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Desktop Top Bar */}
-        <div className="hidden md:flex h-16 items-center px-8 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20">
+        <div className="hidden md:flex h-16 items-center px-8 border-b border-zinc-100 bg-white/95 backdrop-blur-sm sticky top-0 z-20">
           <div className="flex items-center justify-between w-full">
-            <h1 className="text-xl font-heading font-semibold">Painel Administrativo</h1>
+            <h1 className="text-xl font-semibold text-zinc-900">Painel Administrativo</h1>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" asChild>
                 <Link href="/">Voltar ao Site</Link>
@@ -244,4 +246,3 @@ function AdminLayoutInner({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-

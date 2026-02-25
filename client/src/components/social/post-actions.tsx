@@ -1,9 +1,9 @@
+import { useState, useCallback } from 'react';
 import { MessageSquare, Share2, Bookmark, BookmarkCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useEffect } from 'react';
 import { ReactionBar } from './reaction-bar';
-import { useReactions } from '@/hooks/use-reactions';
-import { ReactionType } from '@/types/social';
+import { useTogglePostReaction, getReactionState } from '@/hooks/use-reactions';
+import { Reaction, ReactionType } from '@/types/social';
 import { useSavePost, useUnsavePost, useSavedPostIds } from '@/hooks/use-saved-posts';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -13,68 +13,67 @@ import { useSocialContextSafe } from './social-context';
 
 interface PostActionsProps {
   postId: string;
-  reactions?: Array<{ id: string; type: ReactionType; userId: string; userName: string }>;
+  reactions?: Reaction[];
   commentCount: number;
   currentUserId?: string;
   currentUserName?: string;
   onCommentClick?: () => void;
   onShareClick?: () => void;
-  onReactionChange?: (reactions: Array<{ id: string; type: ReactionType; userId: string; userName: string }>) => void;
   className?: string;
   postTitle?: string;
 }
 
 export function PostActions({
   postId,
-  reactions = [],
+  reactions: initialReactions = [],
   commentCount,
   currentUserId: propUserId,
-  currentUserName: propUserName,
   onCommentClick,
   onShareClick,
-  onReactionChange,
   className,
   postTitle,
 }: PostActionsProps) {
   const { toast } = useToast();
   const { communitySlug } = useSelectedCommunity();
   const socialContext = useSocialContextSafe();
-  
-  // Usar contexto se disponível, senão usar props (compatibilidade)
+  const toggleMutation = useTogglePostReaction();
+
   const currentUserId = propUserId || socialContext?.currentUser?.id || '';
-  const currentUserName = propUserName || socialContext?.currentUser?.name || 'Usuário';
-  
+
   const postIdNum = parseInt(postId) || 0;
   const savedPostIds = useSavedPostIds();
   const isSaved = savedPostIds.includes(postIdNum);
   const savePostMutation = useSavePost();
   const unsavePostMutation = useUnsavePost();
 
-  const { reactions: updatedReactions, userReaction, toggleReaction } = useReactions({
-    initialReactions: reactions,
-    currentUserId,
-    currentUserName,
-  });
+  // Local optimistic state for reactions
+  const [reactions, setReactions] = useState<Reaction[]>(initialReactions);
 
-  // Sync reactions changes with parent (for API integration)
-  useEffect(() => {
-    if (!onReactionChange) return;
-    
-    const hasChanges = 
-      updatedReactions.length !== reactions.length ||
-      updatedReactions.some((r, i) => {
-        const oldR = reactions[i];
-        return !oldR || r.type !== oldR.type || r.userId !== oldR.userId;
-      });
-    
-    if (hasChanges) {
-      onReactionChange(updatedReactions);
-    }
-  }, [updatedReactions, reactions, onReactionChange]);
+  const { userReaction } = getReactionState(reactions, currentUserId);
+
+  const handleReact = useCallback((type: ReactionType) => {
+    // Optimistic update
+    setReactions(prev => {
+      const existingIdx = prev.findIndex(r => r.userId === currentUserId);
+      if (existingIdx >= 0) {
+        if (prev[existingIdx].type === type) {
+          return prev.filter(r => r.userId !== currentUserId);
+        } else {
+          const updated = [...prev];
+          updated[existingIdx] = { ...updated[existingIdx], type };
+          return updated;
+        }
+      } else {
+        return [...prev, { id: `temp-${Date.now()}`, type, userId: currentUserId, userName: '' }];
+      }
+    });
+
+    // Persist to DB
+    toggleMutation.mutate({ postId: postIdNum, reactionType: type });
+  }, [currentUserId, postIdNum, toggleMutation]);
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
     const url = getPostUrl(postId, communitySlug || undefined);
     const result = await shareContent({
       title: postTitle || 'Confira este post',
@@ -82,100 +81,75 @@ export function PostActions({
       url,
     });
 
-    if (result.success) {
-      if (result.method === 'clipboard') {
-        toast({
-          title: 'Link copiado!',
-          description: 'O link foi copiado para a área de transferência',
-        });
-      }
-    } else {
-      toast({
-        title: 'Erro ao compartilhar',
-        description: 'Não foi possível compartilhar o conteúdo',
-        variant: 'destructive',
-      });
+    if (result.success && result.method === 'clipboard') {
+      toast({ title: 'Link copiado!', description: 'O link foi copiado para a area de transferencia' });
+    } else if (!result.success) {
+      toast({ title: 'Erro ao compartilhar', description: 'Nao foi possivel compartilhar o conteudo', variant: 'destructive' });
     }
-
     onShareClick?.();
   };
 
   const handleSaveToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    
     try {
       if (isSaved) {
         await unsavePostMutation.mutateAsync(postIdNum);
-        toast({
-          title: 'Post removido',
-          description: 'O post foi removido dos seus salvos',
-        });
+        toast({ title: 'Post removido', description: 'O post foi removido dos seus salvos' });
       } else {
         await savePostMutation.mutateAsync(postIdNum);
-        toast({
-          title: 'Post salvo',
-          description: 'O post foi salvo com sucesso',
-        });
+        toast({ title: 'Post salvo', description: 'O post foi salvo com sucesso' });
       }
     } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Não foi possível salvar o post',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro', description: error.message || 'Nao foi possivel salvar o post', variant: 'destructive' });
     }
   };
 
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      {/* Reações unificadas */}
+    <div className={cn('flex items-center gap-1', className)}>
       <ReactionBar
-        reactions={updatedReactions}
+        reactions={reactions}
         userReaction={userReaction}
-        onReact={toggleReaction}
+        onReact={handleReact}
       />
 
-      {/* Comentários */}
       <Button
         variant="ghost"
         size="sm"
         onClick={onCommentClick}
-        className="gap-1.5 h-8 px-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+        className="gap-1.5 h-7 px-2.5 rounded-full text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 text-xs"
       >
-        <MessageSquare className="h-4 w-4" />
-        <span className="text-sm font-medium tabular-nums">{commentCount}</span>
+        <MessageSquare className="h-3.5 w-3.5" />
+        <span className="tabular-nums">{commentCount}</span>
       </Button>
 
-      {/* Salvar */}
       <Button
         variant="ghost"
         size="sm"
         onClick={handleSaveToggle}
         disabled={savePostMutation.isPending || unsavePostMutation.isPending}
         className={cn(
-          'gap-1.5 h-8 px-3 rounded-full transition-all duration-200',
-          isSaved 
-            ? 'text-primary bg-primary/10 hover:bg-primary/20' 
-            : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
+          'h-7 w-7 p-0 rounded-full transition-all duration-200',
+          isSaved
+            ? 'text-foreground'
+            : 'text-muted-foreground/40 hover:text-foreground hover:bg-muted/60'
         )}
       >
         {savePostMutation.isPending || unsavePostMutation.isPending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : isSaved ? (
-          <BookmarkCheck className="h-4 w-4 fill-current" />
+          <BookmarkCheck className="h-3.5 w-3.5 fill-current" />
         ) : (
-          <Bookmark className="h-4 w-4" />
+          <Bookmark className="h-3.5 w-3.5" />
         )}
       </Button>
 
-      {/* Compartilhar */}
       <Button
         variant="ghost"
         size="sm"
         onClick={handleShare}
-        className="gap-1.5 h-8 px-3 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80"
+        className="h-7 w-7 p-0 rounded-full text-muted-foreground/40 hover:text-foreground hover:bg-muted/60"
       >
-        <Share2 className="h-4 w-4" />
+        <Share2 className="h-3.5 w-3.5" />
       </Button>
     </div>
   );

@@ -14,7 +14,7 @@ export function MediaBlock({ block, onRemove, className }: MediaBlockProps) {
     switch (block.type) {
       case 'text':
         return (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
+          <div className="prose prose-sm max-w-none">
             <div dangerouslySetInnerHTML={{ __html: block.content }} />
           </div>
         );

@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { Database } from '@/lib/supabase';
+import type { PostReaction } from './reactions';
 
 type Post = Database['public']['Tables']['posts']['Row'];
 type PostInsert = Database['public']['Tables']['posts']['Insert'];
@@ -17,6 +18,8 @@ export interface PostWithRelations extends Post {
     title: string;
   };
   comment_count?: number;
+  reactions?: PostReaction[];
+  recent_avatars?: string[];
 }
 
 export interface PostWithUser extends Post {
@@ -68,26 +71,55 @@ export async function getAllPosts(): Promise<PostWithRelations[]> {
   if (error) throw error;
   if (!data || data.length === 0) return [];
 
-  // Buscar contagem de comentários para cada post
   const postIds = data.map(p => p.id);
-  const { data: commentCounts } = await supabase
-    .from('comments')
-    .select('post_id')
-    .in('post_id', postIds);
 
-  // Criar um mapa de contagem de comentários por post
+  // Batch-fetch comment counts, reactions, and recent commenters in parallel
+  const [commentCountsRes, reactionsRes, recentCommentersRes] = await Promise.all([
+    supabase.from('comments').select('post_id').in('post_id', postIds),
+    supabase.from('post_reactions').select('*').in('post_id', postIds),
+    supabase
+      .from('comments')
+      .select('post_id, users:user_id(avatar_url)')
+      .in('post_id', postIds)
+      .order('created_at', { ascending: false }),
+  ]);
+
+  // Comment count map
   const commentCountMap = new Map<number, number>();
-  if (commentCounts) {
-    commentCounts.forEach(comment => {
-      const count = commentCountMap.get(comment.post_id) || 0;
-      commentCountMap.set(comment.post_id, count + 1);
+  if (commentCountsRes.data) {
+    commentCountsRes.data.forEach(c => {
+      commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) || 0) + 1);
     });
   }
 
-  // Adicionar comment_count a cada post
+  // Reactions map
+  const reactionsMap = new Map<number, PostReaction[]>();
+  if (reactionsRes.data) {
+    for (const r of reactionsRes.data) {
+      const list = reactionsMap.get(r.post_id) || [];
+      list.push(r as PostReaction);
+      reactionsMap.set(r.post_id, list);
+    }
+  }
+
+  // Recent avatars map (up to 3 distinct commenters per post)
+  const recentAvatarsMap = new Map<number, string[]>();
+  if (recentCommentersRes.data) {
+    for (const c of recentCommentersRes.data) {
+      const existing = recentAvatarsMap.get(c.post_id) || [];
+      const avatar = (c.users as any)?.avatar_url;
+      if (avatar && !existing.includes(avatar) && existing.length < 3) {
+        existing.push(avatar);
+        recentAvatarsMap.set(c.post_id, existing);
+      }
+    }
+  }
+
   return data.map(post => ({
     ...post,
     comment_count: commentCountMap.get(post.id) || 0,
+    reactions: reactionsMap.get(post.id) || [],
+    recent_avatars: recentAvatarsMap.get(post.id) || [],
   })) as PostWithRelations[];
 }
 
@@ -197,5 +229,66 @@ export async function pinPost(postId: number): Promise<PostWithRelations> {
  */
 export async function unpinPost(postId: number): Promise<PostWithRelations> {
   return updatePost(postId, { pinned: false });
+}
+
+/**
+ * Busca posts de usuários que o usuário atual segue
+ */
+export async function getFollowingPosts(): Promise<PostWithRelations[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
+  // Get IDs of users the current user follows
+  const { data: follows, error: followsError } = await supabase
+    .from('user_follows')
+    .select('following_id')
+    .eq('follower_id', user.id);
+
+  if (followsError) throw followsError;
+  if (!follows || follows.length === 0) return [];
+
+  const followingIds = follows.map(f => f.following_id);
+
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`
+      *,
+      users:user_id (id, name, email, avatar_url),
+      courses:course_id (id, title)
+    `)
+    .in('user_id', followingIds)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  if (!data || data.length === 0) return [];
+
+  const postIds = data.map(p => p.id);
+
+  const [commentCountsRes, reactionsRes] = await Promise.all([
+    supabase.from('comments').select('post_id').in('post_id', postIds),
+    supabase.from('post_reactions').select('*').in('post_id', postIds),
+  ]);
+
+  const commentCountMap = new Map<number, number>();
+  if (commentCountsRes.data) {
+    commentCountsRes.data.forEach(c => {
+      commentCountMap.set(c.post_id, (commentCountMap.get(c.post_id) || 0) + 1);
+    });
+  }
+
+  const reactionsMap = new Map<number, PostReaction[]>();
+  if (reactionsRes.data) {
+    for (const r of reactionsRes.data) {
+      const list = reactionsMap.get(r.post_id) || [];
+      list.push(r as PostReaction);
+      reactionsMap.set(r.post_id, list);
+    }
+  }
+
+  return data.map(post => ({
+    ...post,
+    comment_count: commentCountMap.get(post.id) || 0,
+    reactions: reactionsMap.get(post.id) || [],
+  })) as PostWithRelations[];
 }
 

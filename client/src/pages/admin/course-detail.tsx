@@ -290,7 +290,7 @@ export default function AdminCourseDetail() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-heading font-bold text-foreground">{course.title}</h1>
+            <h1 className="text-3xl font-bold text-foreground">{course.title}</h1>
             {course.description && (
               <p className="text-muted-foreground mt-1">{course.description}</p>
             )}
@@ -382,7 +382,7 @@ export default function AdminCourseDetail() {
                     const inviteUrl = `${window.location.origin}/course-invite/${invite.token}`;
 
                     return (
-                      <Card key={invite.id} className="border-border/50">
+                      <Card key={invite.id} className="border-zinc-200">
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between">
                             <div className="flex-1 space-y-1">
@@ -390,17 +390,17 @@ export default function AdminCourseDetail() {
                                 <Mail className="h-4 w-4 text-muted-foreground" />
                                 <span className="font-medium">{invite.email}</span>
                                 {isAccepted ? (
-                                  <span className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded flex items-center gap-1">
                                     <CheckCircle2 className="h-3 w-3" />
                                     Aceito
                                   </span>
                                 ) : isExpired ? (
-                                  <span className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded flex items-center gap-1">
                                     <XCircle className="h-3 w-3" />
                                     Expirado
                                   </span>
                                 ) : (
-                                  <span className="text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 px-2 py-0.5 rounded flex items-center gap-1">
+                                  <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded flex items-center gap-1">
                                     <Clock className="h-3 w-3" />
                                     Pendente
                                   </span>

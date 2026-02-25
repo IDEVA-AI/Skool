@@ -47,7 +47,7 @@ export default function ForgotPassword() {
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-heading font-bold">Email Enviado</CardTitle>
+            <CardTitle className="text-2xl font-bold">Email Enviado</CardTitle>
             <CardDescription>
               Verifique sua caixa de entrada para redefinir sua senha
             </CardDescription>
@@ -63,10 +63,10 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-zinc-50">
+      <Card className="w-full max-w-md rounded-[2rem] shadow-2xl border-zinc-200">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading font-bold">Recuperar Senha</CardTitle>
+          <CardTitle className="text-2xl font-bold">Recuperar Senha</CardTitle>
           <CardDescription>
             Digite seu email para receber o link de recuperação
           </CardDescription>
@@ -99,7 +99,7 @@ export default function ForgotPassword() {
           <div className="mt-4 text-center text-sm">
             <button
               onClick={() => setLocation('/login')}
-              className="text-primary hover:underline"
+              className="text-orange-500 hover:text-orange-600 hover:underline"
             >
               Voltar para Login
             </button>

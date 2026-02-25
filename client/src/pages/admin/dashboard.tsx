@@ -78,13 +78,13 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm">Dashboard</h1>
+        <h1 className="text-4xl font-black tracking-tighter text-foreground drop-shadow-sm">Dashboard</h1>
         <p className="text-muted-foreground mt-2 font-medium">Visão geral da plataforma</p>
       </header>
 
       {/* Stats Cards */}
       <div className="grid md:grid-cols-3 gap-6">
-        <Card className="glass-card border-white/5 shadow-sm">
+        <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Cursos</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
@@ -95,7 +95,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-white/5 shadow-sm">
+        <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Inscrições</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-white/5 shadow-sm">
+        <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Aulas</CardTitle>
             <FileVideo className="h-4 w-4 text-muted-foreground" />
@@ -120,10 +120,10 @@ export default function AdminDashboard() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-2xl font-heading font-black tracking-tight mb-4">Ações Rápidas</h2>
+        <h2 className="text-2xl font-black tracking-tight mb-4">Ações Rápidas</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link href="/admin/courses">
-            <Card className="glass-card hover:shadow-lg hover:-translate-y-1 hover:border-white/20 transition-all duration-300 cursor-pointer">
+            <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl hover:shadow-lg hover:-translate-y-1 hover:border-zinc-200 transition-all duration-300 cursor-pointer">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <BookOpen className="h-5 w-5" />
@@ -139,7 +139,7 @@ export default function AdminDashboard() {
           </Link>
 
           <Link href="/admin/media">
-            <Card className="glass-card hover:shadow-lg hover:-translate-y-1 hover:border-white/20 transition-all duration-300 cursor-pointer">
+            <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl hover:shadow-lg hover:-translate-y-1 hover:border-zinc-200 transition-all duration-300 cursor-pointer">
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
@@ -170,11 +170,11 @@ export default function AdminDashboard() {
         </div>
       ) : courses && courses.length > 0 ? (
         <div>
-          <h2 className="text-2xl font-heading font-black tracking-tight mb-4">Cursos Recentes</h2>
+          <h2 className="text-2xl font-black tracking-tight mb-4">Cursos Recentes</h2>
           <div className="space-y-2">
             {courses.slice(0, 5).map((course) => (
               <Link key={course.id} href={`/admin/courses/${course.id}`}>
-                <Card className="glass-card hover:shadow-md hover:-translate-y-0.5 hover:border-white/20 transition-all duration-300 cursor-pointer mt-2">
+                <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl hover:shadow-md hover:-translate-y-0.5 hover:border-zinc-200 transition-all duration-300 cursor-pointer mt-2">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>

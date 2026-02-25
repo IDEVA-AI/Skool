@@ -173,12 +173,12 @@ export default function Profile() {
     return (
       <div className="space-y-8">
         <header>
-          <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm">Meu Perfil</h1>
+          <h1 className="text-4xl font-black tracking-tighter text-foreground drop-shadow-sm">Meu Perfil</h1>
           <p className="text-muted-foreground mt-2 font-medium">
             Gerencie suas informações pessoais
           </p>
         </header>
-        <Card className="glass-card border-white/5 shadow-sm">
+        <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl">
           <CardContent className="p-6 space-y-4">
             <Skeleton className="h-32 w-32 rounded-full" />
             <Skeleton className="h-10 w-full" />
@@ -192,13 +192,13 @@ export default function Profile() {
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="text-4xl font-heading font-black tracking-tighter text-foreground drop-shadow-sm">Meu Perfil</h1>
+        <h1 className="text-4xl font-black tracking-tighter text-foreground drop-shadow-sm">Meu Perfil</h1>
         <p className="text-muted-foreground mt-2 font-medium">
           Gerencie suas informações pessoais
         </p>
       </header>
 
-      <Card className="glass-card border-white/5 shadow-sm">
+      <Card className="bg-white border border-zinc-200 shadow-sm rounded-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <User className="h-5 w-5" />
@@ -211,7 +211,7 @@ export default function Profile() {
         <CardContent className="space-y-6">
           {/* Foto de Perfil */}
           <div className="flex items-center gap-6">
-            <Avatar className="h-24 w-24 border-2 border-border">
+            <Avatar className="h-24 w-24 border-2 border-zinc-200">
               <AvatarImage src={getAvatarUrl() || undefined} />
               <AvatarFallback>
                 {(name || user?.email || 'U')[0]?.toUpperCase()}

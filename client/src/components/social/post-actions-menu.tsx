@@ -1,4 +1,4 @@
-import { MoreHorizontal, Edit, Trash2, Shield, Pin, PinOff } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Shield, Pin, PinOff, Flag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,6 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { ReportDialog } from './report-dialog';
 
 interface PostActionsMenuProps {
   post: Post;
@@ -41,15 +42,22 @@ export function PostActionsMenu({ post, onEdit, className }: PostActionsMenuProp
   const unpinPostMutation = useUnpinPost();
   const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
 
   const canUpdate = can(user, userRole || null, 'update', post);
   const canDelete = can(user, userRole || null, 'delete', post);
   const canModerate = can(user, userRole || null, 'moderate', post);
   const isAdmin = userRole === 'admin';
   const isPinned = post.pinned === true;
+  const isOwnPost = user?.id === post.user_id;
 
-  // Se não há permissões, não renderiza o menu
-  if (!canUpdate && !canDelete && !canModerate) {
+  // Render for any authenticated user (report option always available for non-authors)
+  if (!user) {
+    return null;
+  }
+
+  // If no permissions and own post (nothing to show), still allow menu for report if not own
+  if (!canUpdate && !canDelete && !canModerate && isOwnPost) {
     return null;
   }
 
@@ -182,8 +190,31 @@ export function PostActionsMenu({ post, onEdit, className }: PostActionsMenuProp
               </DropdownMenuGroup>
             </>
           )}
+          {/* Report option for non-authors */}
+          {!isOwnPost && (
+            <>
+              {(canUpdate || canDelete || canModerate) && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                onClick={() => setShowReportDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Flag className="h-4 w-4 mr-2" />
+                Denunciar
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Report dialog */}
+      {!isOwnPost && user && (
+        <ReportDialog
+          isOpen={showReportDialog}
+          onClose={() => setShowReportDialog(false)}
+          postId={post.id}
+          reporterId={user.id}
+        />
+      )}
 
       {/* Dialog de confirmação de exclusão */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

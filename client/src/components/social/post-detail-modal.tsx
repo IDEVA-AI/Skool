@@ -10,10 +10,11 @@ import { PostActionsMenu } from './post-actions-menu';
 import { PostEditDialog } from './post-edit-dialog';
 import { CommentComposer, CommentComposerHandle } from './comment-composer';
 import { CommentList } from './comment-list';
-import { ReactionType } from '@/types/social';
 import { X, Loader2, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useComments } from '@/hooks/use-forum';
+import { useQuery } from '@tanstack/react-query';
+import { getReactionsByCommentIds } from '@/services/reactions';
 import { Post as PostPermissionType } from '@/lib/permissions';
 import { getAvatarUrl } from '@/lib/avatar-utils';
 import { useSocialContextSafe } from './social-context';
@@ -26,7 +27,6 @@ interface PostDetailModalProps {
   currentUserName?: string;
   currentUserAvatar?: string;
   onCommentAdd?: (postId: string, content: string, parentId?: string) => void;
-  onReactionChange?: (postId: string, reactions: Array<{ id: string; type: ReactionType; userId: string; userName: string }>) => void;
   onShare?: (postId: string) => void;
 }
 
@@ -38,7 +38,6 @@ export function PostDetailModal({
   currentUserName: propUserName,
   currentUserAvatar: propUserAvatar,
   onCommentAdd,
-  onReactionChange,
   onShare,
 }: PostDetailModalProps) {
   const [editingPost, setEditingPost] = useState<PostPermissionType | null>(null);
@@ -57,12 +56,24 @@ export function PostDetailModal({
   const postId = post ? parseInt(post.id) || 0 : 0;
   const { data: supabaseComments, isLoading: commentsLoading } = useComments(postId);
 
+  // Batch-fetch comment reactions
+  const commentIds = useMemo(() => {
+    return (supabaseComments || []).map((c: any) => c.id as number);
+  }, [supabaseComments]);
+
+  const { data: commentReactionsMap } = useQuery({
+    queryKey: ['comment-reactions', commentIds],
+    queryFn: () => getReactionsByCommentIds(commentIds),
+    enabled: commentIds.length > 0,
+  });
+
   // Converter comentários para árvore
   const comments = useMemo(() => {
     if (!supabaseComments?.length) return [];
 
     const allComments: Comment[] = supabaseComments.map((comment: any) => {
       const commentUser = comment.users || {};
+      const rawReactions = commentReactionsMap?.get(comment.id) || [];
       return {
         id: String(comment.id),
         content: comment.content,
@@ -70,7 +81,12 @@ export function PostDetailModal({
         authorName: commentUser.name || commentUser.email?.split('@')[0] || 'Usuário',
         authorAvatar: getAvatarUrl(commentUser.avatar_url, commentUser.name || commentUser.email) || undefined,
         createdAt: new Date(comment.created_at),
-        reactions: [],
+        reactions: rawReactions.map(r => ({
+          id: r.id,
+          type: r.reaction_type,
+          userId: r.user_id,
+          userName: '',
+        })),
         parentId: comment.parent_id ? String(comment.parent_id) : undefined,
       };
     });
@@ -97,7 +113,7 @@ export function PostDetailModal({
     });
 
     return rootComments;
-  }, [supabaseComments]);
+  }, [supabaseComments, commentReactionsMap]);
 
   const handleCommentSubmit = useCallback(async (content: string, parentId?: string) => {
     if (!post) return;
@@ -147,13 +163,13 @@ export function PostDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-background border-border/40 shadow-2xl">
+      <DialogContent className="max-w-4xl h-[90vh] p-0 gap-0 overflow-hidden flex flex-col bg-background border-zinc-100 shadow-2xl">
         <VisuallyHidden>
           <DialogTitle>{post.title}</DialogTitle>
         </VisuallyHidden>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 shrink-0">
           <h2 className="text-lg font-semibold truncate pr-4">{post.title || 'Postagem'}</h2>
           <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -172,7 +188,7 @@ export function PostDetailModal({
             <PostContent post={post} showTitle={false} />
 
             {/* Post Actions */}
-            <div className="flex items-center pt-4 border-t border-border/40">
+            <div className="flex items-center pt-4 border-t border-zinc-100">
               <PostActions
                 postId={post.id}
                 reactions={post.reactions}
@@ -181,12 +197,11 @@ export function PostDetailModal({
                 currentUserName={currentUserName}
                 onCommentClick={() => {}}
                 onShareClick={onShare ? () => onShare(post.id) : undefined}
-                onReactionChange={(reactions) => onReactionChange?.(post.id, reactions)}
               />
             </div>
 
             {/* Comments Section */}
-            <div className="space-y-4 pt-6 border-t border-border/40">
+            <div className="space-y-4 pt-6 border-t border-zinc-100">
               <h3 className="text-base font-semibold">
                 Comentários {comments.length > 0 && `(${comments.length})`}
               </h3>

@@ -24,6 +24,7 @@ import AdminMedia from "@/pages/admin/media";
 import AdminSettings from "@/pages/admin/settings";
 import AdminIntegrations from "@/pages/admin/integrations";
 import AdminUnlockPages from "@/pages/admin/unlock-pages";
+import AdminModeration from "@/pages/admin/moderation";
 import InvitePage from "@/pages/invite";
 import CourseInvitePage from "@/pages/course-invite";
 import PurchasePage from "@/pages/purchase";
@@ -32,6 +33,8 @@ import SavedPostsPage from "@/pages/saved-posts";
 import NotificationsPage from "@/pages/notifications";
 import ChatPage from "@/pages/chat/index";
 import ChatDetailPage from "@/pages/chat/[id]";
+import PublicProfilePage from "@/pages/public-profile";
+import HashtagFeedPage from "@/pages/hashtag-feed";
 import { AuthGuard } from "@/components/auth-guard";
 import { AdminGuard } from "@/components/admin-guard";
 import AdminLayout from "@/components/admin-layout";
@@ -116,6 +119,15 @@ function Router() {
           </AdminGuard>
         </AuthGuard>
       </Route>
+      <Route path="/admin/moderation">
+        <AuthGuard>
+          <AdminGuard>
+            <AdminLayout>
+              <AdminModeration />
+            </AdminLayout>
+          </AdminGuard>
+        </AuthGuard>
+      </Route>
       <Route path="/admin">
         <AuthGuard>
           <AdminGuard>
@@ -179,6 +191,20 @@ function Router() {
           </Layout>
         </AuthGuard>
       </Route>
+      <Route path="/c/:slug/members/:userId">
+        <AuthGuard>
+          <Layout>
+            <PublicProfilePage />
+          </Layout>
+        </AuthGuard>
+      </Route>
+      <Route path="/c/:slug/hashtag/:tag">
+        <AuthGuard>
+          <Layout>
+            <HashtagFeedPage />
+          </Layout>
+        </AuthGuard>
+      </Route>
       <Route path="/c/:slug/chat">
         <AuthGuard>
           <Layout>
@@ -206,6 +232,8 @@ function Router() {
               <Route path="/profile" component={ProfilePage} />
               <Route path="/saved" component={SavedPostsPage} />
               <Route path="/notifications" component={NotificationsPage} />
+              <Route path="/members/:userId" component={PublicProfilePage} />
+              <Route path="/hashtag/:tag" component={HashtagFeedPage} />
               <Route path="/chat/:id" component={ChatDetailPage} />
               <Route path="/chat" component={ChatPage} />
               <Route component={NotFound} />

@@ -37,10 +37,10 @@ export default function ChatPage() {
 
   return (
     <div className="h-[calc(100vh-4rem)] flex flex-col">
-      <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="flex items-center justify-between p-4 border-b border-zinc-200">
         <div className="flex items-center gap-3">
-          <MessageSquare className="h-6 w-6 text-primary" />
-          <h1 className="text-2xl font-heading font-bold text-foreground">Mensagens</h1>
+          <MessageSquare className="h-6 w-6 text-zinc-900" />
+          <h1 className="text-2xl font-bold text-zinc-900">Mensagens</h1>
         </div>
         <Button
           variant="outline"
@@ -57,7 +57,7 @@ export default function ChatPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar com lista de conversas */}
-        <div className="w-80 border-r border-border flex flex-col">
+        <div className="w-80 border-r border-zinc-200 flex flex-col">
           <ConversationList
             selectedConversationId={selectedConversationId || undefined}
             onConversationSelect={(id) => setSelectedConversationId(id)}
@@ -69,8 +69,8 @@ export default function ChatPage() {
           {selectedConversationId ? (
             <>
               {/* Header da conversa */}
-              <div className="flex items-center gap-3 p-4 border-b border-border bg-muted/30">
-                <Avatar className="h-10 w-10 border border-border/50">
+              <div className="flex items-center gap-3 p-4 border-b border-zinc-100 bg-zinc-50">
+                <Avatar className="h-10 w-10 border border-zinc-200">
                   <AvatarImage
                     src={getAvatarUrl(displayAvatar, displayName) || undefined}
                   />

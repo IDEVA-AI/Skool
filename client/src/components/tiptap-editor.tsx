@@ -4,6 +4,9 @@ import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import Placeholder from '@tiptap/extension-placeholder';
 import Emoji from '@tiptap/extension-emoji';
+import Mention from '@tiptap/extension-mention';
+import { mentionSuggestion } from '@/lib/mention-suggestion';
+import { GifPicker } from '@/components/social/gif-picker';
 import { ResizableImage } from '@/components/tiptap-extensions/resizable-image';
 import { ResizableIframe } from '@/components/tiptap-extensions/resizable-iframe';
 import { cn } from '@/lib/utils';
@@ -59,6 +62,7 @@ export function TipTapEditor({
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+  const [gifPickerOpen, setGifPickerOpen] = useState(false);
   const { user } = useAuth();
   const { uploadFile, uploading } = useStorageUpload();
   const { toast } = useToast();
@@ -95,6 +99,12 @@ export function TipTapEditor({
       Placeholder.configure({
         placeholder: placeholder || 'Escreva algo...',
       }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention text-primary font-medium',
+        },
+        suggestion: mentionSuggestion,
+      }),
     ],
     content: value,
     onUpdate: ({ editor }) => {
@@ -102,7 +112,7 @@ export function TipTapEditor({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[120px] px-4 py-3 text-foreground',
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[120px] px-4 py-3 text-foreground',
       },
       handleKeyDown: (view, event) => {
         // Permitir Ctrl+A (ou Cmd+A no Mac) para selecionar tudo
@@ -579,6 +589,22 @@ export function TipTapEditor({
             </PopoverContent>
           </Popover>
         </div>
+
+        <div className="h-6 w-px bg-border mx-1" />
+
+        {/* GIF */}
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 px-2 text-xs font-bold"
+            onClick={() => setGifPickerOpen(true)}
+            title="Inserir GIF"
+          >
+            GIF
+          </Button>
+        </div>
       </div>
 
       {/* Link Dialog */}
@@ -621,6 +647,17 @@ export function TipTapEditor({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* GIF Picker */}
+      <GifPicker
+        isOpen={gifPickerOpen}
+        onClose={() => setGifPickerOpen(false)}
+        onSelect={(gif) => {
+          if (editor) {
+            editor.chain().focus().setImage({ src: gif.url, alt: gif.title }).run();
+          }
+        }}
+      />
 
       {/* Editor */}
       <div className="relative bg-background">

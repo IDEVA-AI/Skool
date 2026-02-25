@@ -23,4 +23,4 @@ export { ReactionButton } from './reaction-button'; // Mantido para compatibilid
 export { SocialProvider, useSocialContext, useSocialContextSafe } from './social-context';
 
 // Hooks
-export { useReactions } from '@/hooks/use-reactions';
+export { useTogglePostReaction, getReactionState } from '@/hooks/use-reactions';

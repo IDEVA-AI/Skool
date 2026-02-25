@@ -92,7 +92,7 @@ export async function registerRoutes(
    */
   app.post(`${API_PREFIX}/posts`, authenticateRequest, async (req: Request & { user: { id: string } }, res: Response) => {
     try {
-      const { courseId, title, content } = req.body;
+      const { courseId, title, content, poll } = req.body;
 
       // Validação básica
       if (!courseId || !title || !content) {
@@ -159,10 +159,29 @@ export async function registerRoutes(
         return;
       }
 
-      // TODO: Aqui você pode adicionar:
-      // - Envio de notificações para outros usuários do curso
-      // - Auditoria/logging
-      // - Integração com serviços externos
+      // Create poll if provided
+      if (poll && poll.question && poll.options && poll.options.length >= 2) {
+        const { data: pollData, error: pollError } = await supabase
+          .from('polls')
+          .insert({
+            post_id: post.id,
+            question: poll.question,
+            closes_at: poll.closesAt || null,
+            allow_multiple: poll.allowMultiple || false,
+          })
+          .select()
+          .single();
+
+        if (!pollError && pollData) {
+          const optionInserts = poll.options.map((text: string, i: number) => ({
+            poll_id: pollData.id,
+            text,
+            order: i,
+          }));
+
+          await supabase.from('poll_options').insert(optionInserts);
+        }
+      }
 
       res.status(201).json(post);
     } catch (error) {
