@@ -99,6 +99,7 @@ export default function Feed() {
   } : null);
 
   const handleCreatePost = async (title: string, content: string, poll?: PollData) => {
+    console.log('[Feed] handleCreatePost called with poll:', poll);
     if (!user || !defaultCourse) {
       toast({
         title: 'Erro',
@@ -109,12 +110,9 @@ export default function Feed() {
     }
 
     try {
-      const courseId = await getOrCreateDefaultCourse.mutateAsync({
-        communityId: selectedCommunity?.id || 0,
-      });
-
-      // getOrCreateDefaultCourse returns a number (course ID) directly
-      const resolvedCourseId = typeof courseId === 'number' ? courseId : (courseId as any)?.id ?? courseId;
+      // getOrCreateDefaultCourse expects a string communityId and returns a number (course ID)
+      const communityId = String(selectedCommunity?.id || '');
+      const resolvedCourseId = await getOrCreateDefaultCourse.mutateAsync(communityId);
 
       const post = await createPostMutation.mutateAsync({
         title,
@@ -124,11 +122,13 @@ export default function Feed() {
 
       if (poll) {
         const postId = post?.id;
+        console.log('[Feed] Post returned:', JSON.stringify(post), 'postId:', postId);
         if (postId) {
           try {
             await createPoll(postId, poll.question, poll.options);
+            console.log('[Feed] Poll created successfully for post', postId);
           } catch (pollError: any) {
-            console.error('Erro ao criar enquete:', pollError);
+            console.error('[Feed] Erro ao criar enquete:', pollError);
             toast({
               title: 'Enquete nao criada',
               description: pollError.message || 'Post criado, mas houve erro ao criar a enquete.',
@@ -137,7 +137,7 @@ export default function Feed() {
             return;
           }
         } else {
-          console.error('Post criado sem ID, nao foi possivel criar enquete. Post:', post);
+          console.error('[Feed] Post criado sem ID, nao foi possivel criar enquete. Post:', post);
         }
       }
 

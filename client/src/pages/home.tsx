@@ -21,6 +21,8 @@ import { useSelectedCommunity } from "@/contexts/community-context";
 import { useMemo } from "react";
 import { Post as PostType } from "@/types/social";
 import { getAvatarUrl } from "@/lib/avatar-utils";
+import { createPoll } from "@/services/polls";
+import type { PollData } from "@/components/social/post-composer-simple";
 
 export default function Home() {
   const { user } = useAuth();
@@ -72,16 +74,16 @@ export default function Home() {
     return posts.map(convertSupabasePostToFeedPost);
   }, [posts]);
 
-  const handlePostCreate = async (title: string, content: string) => {
+  const handlePostCreate = async (title: string, content: string, poll?: PollData) => {
     try {
       // Se não há curso disponível, cria ou busca um curso padrão
       let courseIdToUse = defaultCourseId;
-      
+
       if (!courseIdToUse && selectedCommunity) {
         // Cria ou busca curso padrão para a comunidade
         courseIdToUse = await getOrCreateDefaultCourse.mutateAsync(selectedCommunity.id);
       }
-      
+
       if (!courseIdToUse) {
         toast({
           title: 'Erro',
@@ -91,15 +93,19 @@ export default function Home() {
         return;
       }
 
-      await createPostMutation.mutateAsync({
+      const post = await createPostMutation.mutateAsync({
         courseId: courseIdToUse,
         title: title.trim(),
         content: content.trim(),
       });
-      
+
+      if (poll && post?.id) {
+        await createPoll(post.id, poll.question, poll.options);
+      }
+
       toast({
         title: 'Post publicado!',
-        description: 'Seu post foi publicado com sucesso',
+        description: poll ? 'Seu post com enquete foi publicado com sucesso' : 'Seu post foi publicado com sucesso',
       });
     } catch (error: any) {
       toast({

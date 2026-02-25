@@ -9,10 +9,12 @@ import { can } from '@/lib/permissions';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
+import type { PollData } from './post-composer-simple';
+
 interface FeedProps {
   posts: PostType[];
   isLoading?: boolean;
-  onPostCreate?: (title: string, content: string) => Promise<void>;
+  onPostCreate?: (title: string, content: string, poll?: PollData) => Promise<void>;
   onCommentAdd?: (postId: string, content: string, parentId?: string) => void;
   onShare?: (postId: string) => void;
   onPostClick?: (post: PostType) => void;
