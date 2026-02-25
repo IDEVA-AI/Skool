@@ -1,4 +1,4 @@
-import { useState, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
@@ -133,20 +133,22 @@ export const CommentComposer = forwardRef<CommentComposerHandle, CommentComposer
   }, [effectivePlaceholder]);
 
   // Insert @mention when replyingTo changes
-  const lastReplyRef = useState<string | null>(null);
-  if (editor && replyingTo && lastReplyRef[0] !== replyingTo.commentId) {
-    lastReplyRef[1](replyingTo.commentId);
-    // Insert a mention node for the reply author
-    setTimeout(() => {
-      editor.chain().focus().clearContent().insertContent([
-        {
-          type: 'mention',
-          attrs: { id: replyingTo.authorName, label: replyingTo.authorName },
-        },
-        { type: 'text', text: ' ' },
-      ]).run();
-    }, 0);
-  }
+  const lastReplyIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (editor && replyingTo && lastReplyIdRef.current !== replyingTo.commentId) {
+      lastReplyIdRef.current = replyingTo.commentId;
+      // Small delay to ensure editor is ready
+      setTimeout(() => {
+        editor.chain().focus().clearContent().insertContent([
+          {
+            type: 'mention',
+            attrs: { id: replyingTo.authorName, label: replyingTo.authorName },
+          },
+          { type: 'text', text: ' ' },
+        ]).run();
+      }, 50);
+    }
+  }, [editor, replyingTo]);
 
   useImperativeHandle(ref, () => ({
     focus: () => {
