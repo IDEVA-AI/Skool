@@ -16,7 +16,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AnnouncementForm } from '@/components/announcement-form';
 import { AnnouncementBanner } from '@/components/announcement-banner';
 import { useSelectedCommunity } from '@/contexts/community-context';
-import { PostComposerSimple } from '@/components/social/post-composer-simple';
+import { PostComposerSimple, type PollData } from '@/components/social/post-composer-simple';
+import { createPoll } from '@/services/polls';
 import { PostComponent } from '@/components/social/post';
 import { useSocialContextSafe } from '@/components/social/social-context';
 import { useUserRole } from '@/hooks/use-user-role';
@@ -97,7 +98,7 @@ export default function Feed() {
     avatar: user.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.user_metadata?.name || user.email || 'U')}`,
   } : null);
 
-  const handleCreatePost = async (title: string, content: string) => {
+  const handleCreatePost = async (title: string, content: string, poll?: PollData) => {
     if (!user || !defaultCourse) {
       toast({
         title: 'Erro',
@@ -112,15 +113,19 @@ export default function Feed() {
         communityId: selectedCommunity?.id || 0,
       });
 
-      await createPostMutation.mutateAsync({
+      const post = await createPostMutation.mutateAsync({
         title,
         content,
         courseId: course.id,
       });
 
+      if (poll && post?.id) {
+        await createPoll(post.id, poll.question, poll.options);
+      }
+
       toast({
         title: 'Post criado!',
-        description: 'Seu post foi publicado com sucesso.',
+        description: poll ? 'Seu post com enquete foi publicado com sucesso.' : 'Seu post foi publicado com sucesso.',
       });
     } catch (error: any) {
       toast({
