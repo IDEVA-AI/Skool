@@ -109,18 +109,36 @@ export default function Feed() {
     }
 
     try {
-      const course = await getOrCreateDefaultCourse.mutateAsync({
+      const courseId = await getOrCreateDefaultCourse.mutateAsync({
         communityId: selectedCommunity?.id || 0,
       });
+
+      // getOrCreateDefaultCourse returns a number (course ID) directly
+      const resolvedCourseId = typeof courseId === 'number' ? courseId : (courseId as any)?.id ?? courseId;
 
       const post = await createPostMutation.mutateAsync({
         title,
         content,
-        courseId: course.id,
+        courseId: resolvedCourseId,
       });
 
-      if (poll && post?.id) {
-        await createPoll(post.id, poll.question, poll.options);
+      if (poll) {
+        const postId = post?.id;
+        if (postId) {
+          try {
+            await createPoll(postId, poll.question, poll.options);
+          } catch (pollError: any) {
+            console.error('Erro ao criar enquete:', pollError);
+            toast({
+              title: 'Enquete nao criada',
+              description: pollError.message || 'Post criado, mas houve erro ao criar a enquete.',
+              variant: 'destructive',
+            });
+            return;
+          }
+        } else {
+          console.error('Post criado sem ID, nao foi possivel criar enquete. Post:', post);
+        }
       }
 
       toast({
